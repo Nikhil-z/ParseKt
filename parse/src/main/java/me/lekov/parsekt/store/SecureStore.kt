@@ -9,7 +9,7 @@ import me.lekov.parsekt.Parse
 
 class SecureStore {
 
-    private val masterKeyAlias = MasterKey.Builder(Parse.context).build()
+    private val masterKeyAlias = MasterKey.Builder(Parse.context).setKeyScheme(MasterKey.KeyScheme.AES256_GCM).build()
     val sharedPreferences = EncryptedSharedPreferences
         .create(
             Parse.context,
@@ -28,11 +28,15 @@ class SecureStore {
     }
 
     fun setString(key: String, value: String) {
-        return sharedPreferences.edit().putString(key, value).apply()
+        sharedPreferences.edit().putString(key, value).apply()
     }
 
     fun setString(key: String, value: Int) {
-        return sharedPreferences.edit().putInt(key, value).apply()
+        sharedPreferences.edit().putInt(key, value).apply()
+    }
+
+    fun delete(key: String) {
+        sharedPreferences.edit().remove(key).apply()
     }
 
     inline fun <reified T> setObject(key: String, value: T) {
