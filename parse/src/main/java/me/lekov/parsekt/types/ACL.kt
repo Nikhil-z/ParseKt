@@ -76,6 +76,6 @@ class ACL {
     }
 
     companion object {
-        val publicScope = "*"
+        const val publicScope = "*"
     }
 }
