@@ -9,6 +9,7 @@ import io.ktor.http.*
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonConfiguration
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.json
 import me.lekov.parsekt.GameScore
@@ -55,7 +56,8 @@ class ParseApi {
     ) {
         val httpClient = HttpClient(CIO) {
             install(JsonFeature) {
-                serializer = KotlinxSerializer()
+                serializer =
+                    KotlinxSerializer(json = Json(from = Json.Default) { encodeDefaults = false })
             }
         }
 
@@ -90,16 +92,6 @@ class ParseApi {
                 { Result.Failure(it) }
             )
         }
-    }
-
-
-    suspend fun test(): Result<out GameScore?> {
-
-        return Command<GameScore, GameScore>(
-            HttpMethod.Get,
-            Endpoint.Object("GameScore", "CMj37BCFZB"),
-            emptyMap(), mapper = { Json.decodeFromString(it) }
-        ).execute(emptySet())
     }
 
     companion object {

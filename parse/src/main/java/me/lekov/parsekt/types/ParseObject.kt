@@ -4,45 +4,33 @@ import kotlinx.serialization.Required
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import me.lekov.parsekt.api.*
-import me.lekov.parsekt.api.FetchResponse
-import me.lekov.parsekt.api.SaveResponse
 import me.lekov.parsekt.serializers.LocalDateTimeSerializer
 import java.time.LocalDateTime
-import kotlin.reflect.KProperty
-
-interface IDefineable {
-    val className: String
-}
 
 @Serializable
-open class ParseObject {
-    @Required
+abstract class ParseObject {
+
     var objectId: String? = null
 
-    @Required
     @Serializable(with = LocalDateTimeSerializer::class)
     var createdAt: LocalDateTime? = null
 
-    @Required
     @Serializable(with = LocalDateTimeSerializer::class)
     var updatedAt: LocalDateTime? = null
 
     var ACL: ACL? = null
 
-    @Transient
-    internal val _className: String
-        get() = className
+    abstract val className: String
 
-    @Transient
     internal val endpoint: ParseApi.Endpoint
-        get() = objectId?.let { ParseApi.Endpoint.Object(_className, it) }
-            ?: ParseApi.Endpoint.Objects(_className)
+        get() = objectId?.let { ParseApi.Endpoint.Object(className, it) }
+            ?: ParseApi.Endpoint.Objects(className)
 
     @Transient
     internal val isSaved = objectId != null
 
     fun <T : ParseObject> hasSameObjectId(other: T): Boolean {
-        return this._className == other._className && this.objectId == other.objectId
+        return this.className == other.className && this.objectId == other.objectId
     }
 
     suspend fun save(options: Options = emptySet()): ParseApi.Result<out ParseObject> {
@@ -51,16 +39,5 @@ open class ParseObject {
 
     suspend fun fetch(options: Options = emptySet()): ParseApi.Result<out ParseObject> {
         return ParseApi.fetchCommand(this).execute(options)
-    }
-
-    companion object: IDefineable {
-        override val className: String by ClassNameDelegate()
-    }
-}
-
-
-class ClassNameDelegate<T> {
-    operator fun getValue(thisRef: T, property: KProperty<*>): String {
-        return thisRef!!::class.java.enclosingClass.simpleName
     }
 }
