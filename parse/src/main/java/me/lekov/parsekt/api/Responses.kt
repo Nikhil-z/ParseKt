@@ -34,10 +34,3 @@ internal data class UpdateResponse(
         }
     }
 }
-
-@Serializable
-internal class FetchResponse : IApplicable {
-    override fun <T : ParseObject> apply(toItem: T): T {
-        return toItem
-    }
-}
