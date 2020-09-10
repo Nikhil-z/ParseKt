@@ -34,3 +34,19 @@ internal data class UpdateResponse(
         }
     }
 }
+
+@Serializable
+data class LoginSignUpResponse(
+    val objectId: String,
+    val sessionToken: String,
+    val createdAt: @Serializable(with = LocalDateTimeSerializer::class) LocalDateTime,
+    val updatedAt: @Serializable(with = LocalDateTimeSerializer::class) LocalDateTime? = null,
+) : IApplicable {
+    override fun <T : ParseObject> apply(toItem: T): T {
+        return toItem.also {
+            it.objectId = objectId
+            it.createdAt = createdAt
+            it.updatedAt = updatedAt?.let { it } ?: createdAt
+        }
+    }
+}

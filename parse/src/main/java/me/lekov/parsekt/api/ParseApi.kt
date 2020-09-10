@@ -15,6 +15,7 @@ import kotlinx.serialization.json.json
 import me.lekov.parsekt.GameScore
 import me.lekov.parsekt.Parse
 import me.lekov.parsekt.types.ParseObject
+import me.lekov.parsekt.types.ParseUser
 import kotlin.collections.Map
 import kotlin.collections.Set
 import kotlin.collections.forEach
@@ -57,7 +58,10 @@ class ParseApi {
         val httpClient = HttpClient(CIO) {
             install(JsonFeature) {
                 serializer =
-                    KotlinxSerializer(json = Json(from = Json.Default) { encodeDefaults = false })
+                    KotlinxSerializer(json = Json(from = Json.Default) {
+                        encodeDefaults = false
+                        ignoreUnknownKeys = true
+                    })
             }
         }
 
@@ -105,8 +109,9 @@ class ParseApi {
                 headers["X-Parse-Client-Key"] = it
             }
 
-            // TODO: Same for the session token
-            //  headers["X-Parse-Session-Token"] = token
+            ParseUser.sessionToken?.let {
+                headers["X-Parse-Session-Token"] = it
+            }
 
             options.forEach {
                 when (it) {
@@ -133,25 +138,25 @@ class ParseApi {
             is Endpoint.Object -> "/classes/${endpoint.className}/${endpoint.objectId}"
             is Endpoint.Login -> "/login"
             is Endpoint.Signup -> "/users"
-            is Endpoint.Logout -> "/users/logout"
+            is Endpoint.Logout -> "/logout"
             is Endpoint.Other -> endpoint.path
         }
 
-        fun <T : ParseObject> createCommand(item: T): Command<T, T> {
+        private fun <T : ParseObject> createCommand(item: T): Command<T, T> {
             return Command(HttpMethod.Post, item.endpoint, body = item, mapper = {
-                val res = Json.decodeFromString(SaveResponse.serializer(), it)
+                val res = ParseObject.json.decodeFromString(SaveResponse.serializer(), it)
                 res.apply(item)
             })
         }
 
-        fun <T : ParseObject> updateCommand(item: T): Command<T, T> {
+        private fun <T : ParseObject> updateCommand(item: T): Command<T, T> {
             return Command(HttpMethod.Put, item.endpoint, body = item, mapper = {
-                val res = Json.decodeFromString(UpdateResponse.serializer(), it)
+                val res = ParseObject.json.decodeFromString(UpdateResponse.serializer(), it)
                 res.apply(item)
             })
         }
 
-        fun <T : ParseObject> saveCommand(item: T): Command<T, T> {
+        internal fun <T : ParseObject> saveCommand(item: T): Command<T, T> {
             return if (item.isSaved) {
                 updateCommand(item)
             } else {
@@ -166,7 +171,7 @@ class ParseApi {
             }
 
             return Command(HttpMethod.Get, item.endpoint, body = item, mapper = {
-                val res = Json.decodeFromString<T>(it)
+                val res = ParseObject.json.decodeFromString<T>(it)
                 res
             })
         }
