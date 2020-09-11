@@ -50,3 +50,6 @@ data class LoginSignUpResponse(
         }
     }
 }
+
+@Serializable
+data class FindResponse<T: ParseObject>(val results: List<T>? = null, val count: Int? = null)

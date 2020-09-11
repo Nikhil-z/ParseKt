@@ -2,26 +2,25 @@ package me.lekov.parsekt.api
 
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
+import io.ktor.client.features.*
+import io.ktor.client.features.cache.*
 import io.ktor.client.features.json.*
 import io.ktor.client.features.json.serializer.*
 import io.ktor.client.request.*
 import io.ktor.http.*
+import io.ktor.util.network.*
+import io.ktor.utils.io.*
+import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonConfiguration
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.json
-import kotlinx.serialization.parse
-import me.lekov.parsekt.GameScore
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.contextual
 import me.lekov.parsekt.Parse
+import me.lekov.parsekt.serializers.LocalDateTimeSerializer
 import me.lekov.parsekt.types.ParseError
 import me.lekov.parsekt.types.ParseObject
 import me.lekov.parsekt.types.ParseUser
-import kotlin.collections.Map
-import kotlin.collections.Set
-import kotlin.collections.forEach
-import kotlin.collections.mutableMapOf
+import java.time.LocalDateTime
 import kotlin.collections.set
 
 typealias Options = Set<ParseApi.Option>
@@ -49,14 +48,26 @@ class ParseApi {
         val path: Endpoint,
         val params: Map<String, String>? = emptyMap(),
         val body: T? = null,
-        var mapper: (String) -> U
+        var mapper: (String) -> U,
+        val serializers: SerializersModule? = null
     ) {
         val httpClient = HttpClient(CIO) {
+            install(HttpCache)
             install(JsonFeature) {
                 serializer =
                     KotlinxSerializer(json = Json(from = Json.Default) {
                         encodeDefaults = false
                         ignoreUnknownKeys = true
+                        serializersModule = SerializersModule {
+                            contextual(String.serializer())
+                            contextual(Int.serializer())
+                            contextual(Long.serializer())
+                            contextual(Double.serializer())
+                            contextual(Boolean.serializer())
+                            contextual(ParseObject.serializer())
+                            contextual(ParseUser.serializer())
+                            serializers?.let { include(it) }
+                        }
                     })
             }
         }
@@ -161,13 +172,18 @@ class ParseApi {
             return Command(HttpMethod.Post, item.endpoint, body = item, mapper = {
                 val res = ParseObject.json.decodeFromString(SaveResponse.serializer(), it)
                 res.apply(item)
-            })
+            },
+                serializers = SerializersModule {
+                    contextual(LocalDateTime::class, LocalDateTimeSerializer)
+                })
         }
 
         private fun <T : ParseObject> updateCommand(item: T): Command<T, T> {
             return Command(HttpMethod.Put, item.endpoint, body = item, mapper = {
                 val res = ParseObject.json.decodeFromString(UpdateResponse.serializer(), it)
                 res.apply(item)
+            }, serializers = SerializersModule {
+                contextual(LocalDateTime::class, LocalDateTimeSerializer)
             })
         }
 
@@ -188,7 +204,10 @@ class ParseApi {
             return Command(HttpMethod.Get, item.endpoint, body = item, mapper = {
                 val res = ParseObject.json.decodeFromString<T>(it)
                 res
-            })
+            },
+                serializers = SerializersModule {
+                    contextual(LocalDateTime::class, LocalDateTimeSerializer)
+                })
         }
     }
 }
