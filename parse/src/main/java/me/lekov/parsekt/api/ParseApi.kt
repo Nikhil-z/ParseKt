@@ -12,8 +12,10 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonConfiguration
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.json
+import kotlinx.serialization.parse
 import me.lekov.parsekt.GameScore
 import me.lekov.parsekt.Parse
+import me.lekov.parsekt.types.ParseError
 import me.lekov.parsekt.types.ParseObject
 import me.lekov.parsekt.types.ParseUser
 import kotlin.collections.Map
@@ -42,12 +44,6 @@ class ParseApi {
         class InstallationId(val instalattion: String) : Option()
     }
 
-    sealed class Result<T> {
-        data class Success<T>(val data: T) : Result<T>()
-        data class Failure(val error: Throwable) : Result<Nothing>()
-        object Empty : Result<Nothing>()
-    }
-
     data class Command<T, U>(
         val method: HttpMethod,
         val path: Endpoint,
@@ -65,7 +61,7 @@ class ParseApi {
             }
         }
 
-        suspend inline fun execute(options: Options): Result<out U> {
+        suspend inline fun execute(options: Options = emptySet()): U {
 
             val result = kotlin.runCatching {
                 httpClient.request<String> {
@@ -91,9 +87,28 @@ class ParseApi {
 
             return result.fold(
                 {
-                    Result.Success(mapper.invoke(it))
+                    mapper.invoke(it)
                 },
-                { Result.Failure(it) }
+                {
+                    when (it) {
+                        is ClientRequestException ->
+                            it.response?.let { response ->
+                                response.content.readUTF8Line()?.let { raw ->
+                                    throw Json.decodeFromString<ParseError>(
+                                        raw
+                                    )
+                                } ?: throw Error()
+                            } ?: throw Error()
+                        is UnresolvedAddressException -> {
+                            // Internet Error
+                            throw ParseError(ParseError.CONNECTION_FAILED)
+                        }
+                        else -> {
+                            // Unhandled error
+                            throw it
+                        }
+                    }
+                }
             )
         }
     }

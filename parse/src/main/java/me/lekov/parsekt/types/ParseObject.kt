@@ -35,11 +35,11 @@ abstract class ParseObject {
         return this.className == other.className && this.objectId == other.objectId
     }
 
-    suspend fun save(options: Options = emptySet()): ParseApi.Result<out ParseObject> {
+    suspend fun save(options: Options = emptySet()): ParseObject {
         return ParseApi.saveCommand(this).execute(options)
     }
 
-    suspend fun fetch(options: Options = emptySet()): ParseApi.Result<out ParseObject> {
+    suspend fun fetch(options: Options = emptySet()): ParseObject {
         return ParseApi.fetchCommand(this).execute(options)
     }
 

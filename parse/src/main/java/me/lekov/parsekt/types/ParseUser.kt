@@ -51,6 +51,9 @@ open class ParseUser : ParseObject() {
                     val raw = json.decodeFromString<LoginSignUpResponse>(it)
                     val user = json.decodeFromString<T>(it)
 
+                    user.username = username
+                    user.password = password
+
                     currentUserContainer = CurrentUserContainer(user, raw.sessionToken)
                     user
                 })
@@ -84,15 +87,15 @@ open class ParseUser : ParseObject() {
                 })
         }
 
-        suspend fun login(username: String, password: String): ParseApi.Result<out ParseUser> {
+        suspend fun login(username: String, password: String): ParseUser {
             return loginCommand<ParseUser>(username, password).execute(emptySet())
         }
 
-        suspend fun signup(username: String, password: String): ParseApi.Result<out ParseUser> {
+        suspend fun signup(username: String, password: String): ParseUser {
             return signupCommand<ParseUser>(username, password).execute(emptySet())
         }
 
-        suspend fun logout(): ParseApi.Result<out Unit> {
+        suspend fun logout() {
             return logoutCommand().execute(emptySet())
         }
     }
