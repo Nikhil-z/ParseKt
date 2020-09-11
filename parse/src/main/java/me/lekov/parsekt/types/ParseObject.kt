@@ -8,8 +8,20 @@ import me.lekov.parsekt.api.ParseApi
 import me.lekov.parsekt.serializers.LocalDateTimeSerializer
 import java.time.LocalDateTime
 
+open class ParseObjectCompanion {
+    fun query(builder: ParseQuery.Builder.() -> Unit): ParseQuery {
+        return ParseQuery(ParseQuery.Builder().apply(builder))
+    }
+
+    val json
+        get() = Json(from = Json) {
+            encodeDefaults = false
+            ignoreUnknownKeys = true
+        }
+}
+
 @Serializable
-abstract class ParseObject {
+open class ParseObject {
 
     var objectId: String? = null
 
@@ -22,7 +34,8 @@ abstract class ParseObject {
     @Serializable(with = ACL.ACLSerializer::class)
     var ACL: ACL? = null
 
-    abstract val className: String
+    @Transient
+    val className: String = ParseClasses.valueOf(this::class.simpleName!!).name
 
     internal val endpoint: ParseApi.Endpoint
         get() = objectId?.let { ParseApi.Endpoint.Object(className, it) }
@@ -31,7 +44,7 @@ abstract class ParseObject {
     @Transient
     internal val isSaved = objectId != null
 
-    fun <T : ParseObject> hasSameObjectId(other: T): Boolean {
+    fun hasSameObjectId(other: ParseObject): Boolean {
         return this.className == other.className && this.objectId == other.objectId
     }
 
@@ -43,10 +56,9 @@ abstract class ParseObject {
         return ParseApi.fetchCommand(this).execute(options)
     }
 
-    companion object {
-        internal val json = Json(from = Json) {
-            encodeDefaults = false
-            ignoreUnknownKeys = true
-        }
+    override fun toString(): String {
+        return "ParseObject(objectId=$objectId, createdAt=$createdAt, updatedAt=$updatedAt, ACL=$ACL, className='$className')"
     }
+
+    companion object : ParseObjectCompanion()
 }

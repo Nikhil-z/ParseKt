@@ -3,22 +3,21 @@ package me.lekov.parsekt.types
 import io.ktor.http.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.json.Json
+import me.lekov.parsekt.annotations.ParseClass
 import me.lekov.parsekt.api.LoginSignUpResponse
 import me.lekov.parsekt.api.ParseApi
 import me.lekov.parsekt.store.ParseStore
 import me.lekov.parsekt.store.SecureStore
 
 @Serializable
+@ParseClass("_User")
 open class ParseUser : ParseObject() {
-
-    override val className: String = "_User"
 
     var username: String? = null
     var email: String? = null
     var password: String? = null
 
-    companion object {
+    companion object: ParseObjectCompanion() {
 
         @Serializable
         data class CurrentUserContainer(var currentUser: ParseUser?, var sessionToken: String?)
