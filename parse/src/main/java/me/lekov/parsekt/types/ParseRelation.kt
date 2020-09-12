@@ -4,9 +4,8 @@ import kotlinx.serialization.Required
 import kotlinx.serialization.Serializable
 
 @Serializable
-class GeoPoint(
+data class ParseRelation(
     @Required
-    private val __type: String = "GeoPoint",
-    val latitude: Double,
-    val longitude: Double
+    private val __type: String = "Relation",
+    var className: String? = null
 )

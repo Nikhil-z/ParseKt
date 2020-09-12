@@ -2,13 +2,18 @@ package me.lekov.parsekt.types
 
 import io.ktor.http.*
 import kotlinx.serialization.*
+import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.contextual
 import me.lekov.parsekt.api.FindResponse
 import me.lekov.parsekt.api.LocalDateTimeQuerySerializer
 import me.lekov.parsekt.api.Options
@@ -18,31 +23,69 @@ import org.intellij.lang.annotations.RegExp
 import java.time.LocalDateTime
 import kotlin.collections.set
 
-@Serializable
 data class QueryConstraint(
     val key: String,
-    @Contextual val value: Any,
+    val value: Any,
     val comparator: String
 )
 
-private enum class QueryComparator(val operator: String) {
+enum class QueryComparator(val operator: String) {
+    Or("\$or"),
+    And("\$and"),
+    Not("\$not"),
+    Nor("\$nor"),
     LessThan("\$lt"),
     LessThanOrEqualTo("\$lte"),
     GreaterThan("\$gt"),
     GreaterThanOrEqualTo("\$gte"),
     Equals("\$eq"),
-    NotEquals("\$neq"),
+    NotEquals("\$ne"),
     ContainedIn("\$in"),
     NotContainedIn("\$nin"),
+    ContainedBy("\$containedBy"),
     Exists("\$exists"),
     Matches("\$select"),
     NotMatches("\$dontSelect"),
     ContainsAll("\$all"),
     RexEx("\$regex"),
     Text("\$text"),
+    Near("\$nearSphere"),
+    MaxDistanceInMiles("\$maxDistanceInMiles"),
 }
 
-class ParseQuery internal constructor(val query: Builder) {
+class ParseQuery internal constructor(@PublishedApi internal val query: Builder) {
+
+    private val or = mutableListOf<MutableList<QueryConstraint>>()
+    private val and = mutableListOf<MutableList<QueryConstraint>>()
+
+    fun or(vararg value: ParseQuery): ParseQuery {
+        or.clear()
+        or.add(query.constraints.toMutableList())
+        or.addAll(value.map { it.query.constraints })
+
+        query.clear()
+        query.addQueryConstraint(
+            Or.operator,
+            or.map { Json.encodeToJsonElement(QueryConstraintsSerializer, it) },
+            Or.operator
+        )
+        return this
+    }
+
+    fun and(vararg value: ParseQuery): ParseQuery {
+        and.clear()
+        and.add(query.constraints.toMutableList())
+        and.addAll(value.map { it.query.constraints })
+
+        query.clear()
+        query.addQueryConstraint(
+            And.operator,
+            and.map { Json.encodeToJsonElement(QueryConstraintsSerializer, it) },
+            And.operator
+        )
+
+        return this
+    }
 
     suspend inline fun <reified T : ParseObject<T>> find(options: Options = emptySet()): List<T> {
         val className = ParseClasses.valueOf(T::class.simpleName!!).name
@@ -77,7 +120,7 @@ class ParseQuery internal constructor(val query: Builder) {
                     ignoreUnknownKeys = true
                 }.decodeFromString<FindResponse<T>>(it)
                 res.results ?: emptyList()
-            },serializers = SerializersModule {
+            }, serializers = SerializersModule {
                 contextual(LocalDateTime::class, LocalDateTimeQuerySerializer)
             }).execute(options)
     }
@@ -98,15 +141,12 @@ class ParseQuery internal constructor(val query: Builder) {
                     ignoreUnknownKeys = true
                 }.decodeFromString<FindResponse<T>>(it)
                 res.count ?: 0
-            },serializers = SerializersModule {
+            }, serializers = SerializersModule {
                 contextual(LocalDateTime::class, LocalDateTimeQuerySerializer)
             }).execute(options)
     }
 
-    suspend inline fun <reified T : ParseObject<T>> get(
-        id: String,
-        options: Options = emptySet()
-    ): T? {
+    suspend inline fun <reified T : ParseObject<T>> get(id: String, options: Options = emptySet()): T? {
         val className = ParseClasses.valueOf(T::class.simpleName!!).name
 
         query.clear()
@@ -122,7 +162,7 @@ class ParseQuery internal constructor(val query: Builder) {
                     ignoreUnknownKeys = true
                 }.decodeFromString<FindResponse<T>>(it)
                 res.results?.first()
-            },serializers = SerializersModule {
+            }, serializers = SerializersModule {
                 contextual(LocalDateTime::class, LocalDateTimeQuerySerializer)
             }).execute(options)
     }
@@ -137,9 +177,10 @@ class ParseQuery internal constructor(val query: Builder) {
 //        private var include: Set<String>? = null
 //        private var order: List<String>? = null
 
+        @PublishedApi
         @SerialName("where")
-        @Serializable(with = ConstraintSerializer::class)
-        private val constraints: MutableMap<String, MutableList<QueryConstraint>> = mutableMapOf()
+        @Serializable(with = QueryConstraintsSerializer::class)
+        internal val constraints: MutableList<@Contextual QueryConstraint> = mutableListOf()
 
         fun equalsTo(key: String, value: Any) {
             Equals.attachFor(key, value)
@@ -205,9 +246,18 @@ class ParseQuery internal constructor(val query: Builder) {
             ContainsAll.attachFor(key, value)
         }
 
+        fun near(key: String, value: ParseGeoPoint) {
+            Near.attachFor(key, value)
+        }
+
+        fun withinMiles(key: String, value: ParseGeoPoint, miles: Number) {
+            Near.attachFor(key, value)
+            MaxDistanceInMiles.attachFor(key, value)
+        }
+
         fun clear(key: String? = null) {
             key?.let {
-                constraints.remove(key)
+                constraints.removeIf { it.key == key }
             } ?: kotlin.run {
                 constraints.clear()
                 skip = 0
@@ -216,10 +266,8 @@ class ParseQuery internal constructor(val query: Builder) {
             }
         }
 
-        private fun addQueryConstraint(key: String, value: Any, comparator: String) {
-            val existing = constraints.getOrDefault(key, mutableListOf())
-            existing.add(QueryConstraint(key, value, comparator))
-            constraints[key] = existing
+        internal fun addQueryConstraint(key: String, value: Any, comparator: String) {
+            constraints.add(QueryConstraint(key, value, comparator))
         }
 
         private fun QueryComparator.attachFor(key: String, value: Any) {
@@ -228,41 +276,72 @@ class ParseQuery internal constructor(val query: Builder) {
     }
 }
 
-object ConstraintSerializer :
-    KSerializer<MutableMap<String, MutableList<QueryConstraint>>> {
+object QueryConstraintsSerializer :
+    KSerializer<MutableList<QueryConstraint>> {
 
     override fun serialize(
         encoder: Encoder,
-        value: MutableMap<String, MutableList<QueryConstraint>>
+        value: MutableList<QueryConstraint>
     ) {
-        val map =
-            value.asIterable().fold(mutableMapOf<String, MutableMap<String, Any>>(), { acc, entry ->
-                entry.value.fold(
-                    mutableMapOf(),
-                    { operations, constraint ->
 
-                        val existing = operations.getOrPut(constraint.key) {
-                            mutableMapOf()
+        val json = Json {
+            serializersModule = SerializersModule {
+                contextual(LocalDateTimeQuerySerializer)
+            }
+        }
+
+        val groupedIterable = value.groupBy { it.key }.asIterable()
+
+        if (value.any { it.key == "\$or" || it.key == "\$and" }) {
+            val nestedQueries = value.first { it.key == "\$or" || it.key == "\$and" }
+            encoder.encodeSerializableValue(
+                MapSerializer(
+                    String.serializer(),
+                    ListSerializer(JsonElement.serializer()),
+                ), mapOf(nestedQueries.key to nestedQueries.value as ArrayList<JsonElement>)
+            )
+        } else {
+            val where = groupedIterable
+                .fold(mutableMapOf<String, Map<String, JsonElement>>()) { acc, entry ->
+                    acc[entry.key] = entry.value.associate {
+                        it.comparator to when (it.value) {
+                            is Number -> JsonPrimitive(it.value)
+                            is Boolean -> JsonPrimitive(it.value)
+                            is String -> JsonPrimitive(it.value)
+                            is LocalDateTime -> json.parseToJsonElement(json.encodeToString(it.value))
+                            is ParseClass -> json.parseToJsonElement(
+                                json.encodeToString(
+                                    ParsePointer(it.value)
+                                )
+                            )
+                            is ParseUser -> json.parseToJsonElement(
+                                json.encodeToString(
+                                    ParsePointer(
+                                        it.value
+                                    )
+                                )
+                            )
+                            else -> json.encodeToJsonElement(
+                                ListSerializer(JsonElement.serializer()),
+                                it.value as List<JsonElement>
+                            )
                         }
+                    }
 
-                        existing[constraint.comparator] = constraint.value
+                    acc
+                }
 
-                        operations
-                    })
-            })
-
-        encoder.encodeSerializableValue(
-            MapSerializer(
-                String.serializer(),
-                MapSerializer(String.serializer(), ContextualSerializer(Any::class))
-            ), map
-        )
+            encoder.encodeSerializableValue(
+                JsonElement.serializer(),
+                Json.encodeToJsonElement(where)
+            )
+        }
     }
 
     override val descriptor: SerialDescriptor
-        get() = TODO("Not yet implemented")
+        get() = JsonElement.serializer().descriptor
 
-    override fun deserialize(decoder: Decoder): MutableMap<String, MutableList<QueryConstraint>> {
+    override fun deserialize(decoder: Decoder): MutableList<QueryConstraint> {
         TODO("Not yet implemented")
     }
 }
