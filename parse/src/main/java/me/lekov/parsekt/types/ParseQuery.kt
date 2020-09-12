@@ -44,7 +44,7 @@ private enum class QueryComparator(val operator: String) {
 
 class ParseQuery internal constructor(val query: Builder) {
 
-    suspend inline fun <reified T : ParseObject> find(options: Options = emptySet()): List<T> {
+    suspend inline fun <reified T : ParseObject<T>> find(options: Options = emptySet()): List<T> {
         val className = ParseClasses.valueOf(T::class.simpleName!!).name
 
         return ParseApi.Command(
@@ -62,7 +62,7 @@ class ParseQuery internal constructor(val query: Builder) {
             }).execute(options)
     }
 
-    suspend inline fun <reified T : ParseObject> first(options: Options = emptySet()): List<T> {
+    suspend inline fun <reified T : ParseObject<T>> first(options: Options = emptySet()): List<T> {
         val className = ParseClasses.valueOf(T::class.simpleName!!).name
 
         query.limit = 1
@@ -82,7 +82,7 @@ class ParseQuery internal constructor(val query: Builder) {
             }).execute(options)
     }
 
-    suspend inline fun <reified T : ParseObject> count(options: Options = emptySet()): Int {
+    suspend inline fun <reified T : ParseObject<T>> count(options: Options = emptySet()): Int {
         val className = ParseClasses.valueOf(T::class.simpleName!!).name
 
         query.limit = 0
@@ -103,7 +103,7 @@ class ParseQuery internal constructor(val query: Builder) {
             }).execute(options)
     }
 
-    suspend inline fun <reified T : ParseObject> get(
+    suspend inline fun <reified T : ParseObject<T>> get(
         id: String,
         options: Options = emptySet()
     ): T? {

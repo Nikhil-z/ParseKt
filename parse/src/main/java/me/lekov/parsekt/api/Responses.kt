@@ -6,7 +6,7 @@ import me.lekov.parsekt.types.ParseObject
 import java.time.LocalDateTime
 
 interface IApplicable {
-    fun <T : ParseObject> apply(toItem: T): T
+    fun <T : ParseObject<T>> apply(toItem: T): T
 }
 
 @Serializable
@@ -15,7 +15,7 @@ internal data class SaveResponse(
     val createdAt: @Serializable(with = LocalDateTimeSerializer::class) LocalDateTime,
     val updatedAt: @Serializable(with = LocalDateTimeSerializer::class) LocalDateTime? = null,
 ) : IApplicable {
-    override fun <T : ParseObject> apply(toItem: T): T {
+    override fun <T : ParseObject<T>> apply(toItem: T): T {
         return toItem.also {
             it.objectId = objectId
             it.createdAt = createdAt
@@ -28,7 +28,7 @@ internal data class SaveResponse(
 internal data class UpdateResponse(
     val updatedAt: @Serializable(with = LocalDateTimeSerializer::class) LocalDateTime,
 ) : IApplicable {
-    override fun <T : ParseObject> apply(toItem: T): T {
+    override fun <T : ParseObject<T>> apply(toItem: T): T {
         return toItem.also {
             it.updatedAt = updatedAt
         }
@@ -42,7 +42,7 @@ data class LoginSignUpResponse(
     val createdAt: @Serializable(with = LocalDateTimeSerializer::class) LocalDateTime,
     val updatedAt: @Serializable(with = LocalDateTimeSerializer::class) LocalDateTime? = null,
 ) : IApplicable {
-    override fun <T : ParseObject> apply(toItem: T): T {
+    override fun <T : ParseObject<T>> apply(toItem: T): T {
         return toItem.also {
             it.objectId = objectId
             it.createdAt = createdAt
@@ -52,4 +52,4 @@ data class LoginSignUpResponse(
 }
 
 @Serializable
-data class FindResponse<T: ParseObject>(val results: List<T>? = null, val count: Int? = null)
+data class FindResponse<T: ParseObject<T>>(val results: List<T>? = null, val count: Int? = null)

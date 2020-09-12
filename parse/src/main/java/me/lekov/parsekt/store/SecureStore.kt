@@ -9,7 +9,8 @@ import me.lekov.parsekt.Parse
 
 class SecureStore {
 
-    private val masterKeyAlias = MasterKey.Builder(Parse.context).setKeyScheme(MasterKey.KeyScheme.AES256_GCM).build()
+    private val masterKeyAlias =
+        MasterKey.Builder(Parse.context).setKeyScheme(MasterKey.KeyScheme.AES256_GCM).build()
     val sharedPreferences = EncryptedSharedPreferences
         .create(
             Parse.context,
@@ -40,12 +41,18 @@ class SecureStore {
     }
 
     inline fun <reified T> setObject(key: String, value: T) {
-        sharedPreferences.edit().putString(key, Json.encodeToString(value)).apply()
+        sharedPreferences.edit()
+            .putString(key, Json { ignoreUnknownKeys = true }.encodeToString(value)).apply()
     }
 
     inline fun <reified T> getObject(key: String): T? {
         if (sharedPreferences.contains(key)) {
-            return Json.decodeFromString(sharedPreferences.getString(key, null)!!)
+            return Json { ignoreUnknownKeys = true }.decodeFromString(
+                sharedPreferences.getString(
+                    key,
+                    null
+                )!!
+            )
         }
 
         return null
@@ -53,6 +60,8 @@ class SecureStore {
 
     companion object {
         private const val SECURE_PREFERENCE_FILENAME = "parse_secure_storage"
+
+        @PublishedApi
         internal const val CURRENT_USER_KEY = "_currentUser"
     }
 }

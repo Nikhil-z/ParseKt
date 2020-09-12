@@ -64,7 +64,6 @@ class ParseApi {
                             contextual(Long.serializer())
                             contextual(Double.serializer())
                             contextual(Boolean.serializer())
-                            contextual(ParseObject.serializer())
                             contextual(ParseUser.serializer())
                             serializers?.let { include(it) }
                         }
@@ -125,7 +124,8 @@ class ParseApi {
     }
 
     companion object {
-        fun getHeaders(options: Options): Map<String, String> {
+        @PublishedApi
+        internal fun getHeaders(options: Options): Map<String, String> {
 
             val headers = mutableMapOf(
                 "X-Parse-Application-Id" to Parse.applicationId,
@@ -158,7 +158,8 @@ class ParseApi {
             return headers
         }
 
-        fun urlComponent(endpoint: Endpoint) = when (endpoint) {
+        @PublishedApi
+        internal fun urlComponent(endpoint: Endpoint) = when (endpoint) {
             is Endpoint.Batch -> "/batch"
             is Endpoint.Objects -> "/classes/${endpoint.className}"
             is Endpoint.Object -> "/classes/${endpoint.className}/${endpoint.objectId}"
@@ -168,7 +169,8 @@ class ParseApi {
             is Endpoint.Other -> endpoint.path
         }
 
-        private fun <T : ParseObject> createCommand(item: T): Command<T, T> {
+        @PublishedApi
+        internal fun <T : ParseObject<T>> createCommand(item: T): Command<T, T> {
             return Command(HttpMethod.Post, item.endpoint, body = item, mapper = {
                 val res = ParseObject.json.decodeFromString(SaveResponse.serializer(), it)
                 res.apply(item)
@@ -178,7 +180,8 @@ class ParseApi {
                 })
         }
 
-        private fun <T : ParseObject> updateCommand(item: T): Command<T, T> {
+        @PublishedApi
+        internal fun <T : ParseObject<T>> updateCommand(item: T): Command<T, T> {
             return Command(HttpMethod.Put, item.endpoint, body = item, mapper = {
                 val res = ParseObject.json.decodeFromString(UpdateResponse.serializer(), it)
                 res.apply(item)
@@ -187,7 +190,8 @@ class ParseApi {
             })
         }
 
-        internal fun <T : ParseObject> saveCommand(item: T): Command<T, T> {
+        @PublishedApi
+        internal fun <T : ParseObject<T>> saveCommand(item: T): Command<T, T> {
             return if (item.isSaved) {
                 updateCommand(item)
             } else {
@@ -195,7 +199,8 @@ class ParseApi {
             }
         }
 
-        internal inline fun <reified T : ParseObject> fetchCommand(item: T): Command<T, T> {
+        @PublishedApi
+        internal inline fun <reified T : ParseObject<T>> fetchCommand(item: T): Command<T, T> {
 
             if (!item.isSaved) {
                 throw Error("Cannot fetch an object without id")
@@ -210,4 +215,12 @@ class ParseApi {
                 })
         }
     }
+}
+
+suspend inline fun <reified T : ParseObject<T>> ParseObject<T>.save(options: Options = emptySet()): ParseObject<T> {
+    return ParseApi.saveCommand(this as T).execute(options)
+}
+
+suspend inline fun <reified T : ParseObject<T>> ParseObject<T>.fetch(options: Options = emptySet()): ParseObject<T> {
+    return ParseApi.fetchCommand(this as T).execute(options)
 }

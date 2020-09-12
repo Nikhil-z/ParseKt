@@ -1,9 +1,7 @@
 package me.lekov.parsekt.processor
 
-import com.squareup.kotlinpoet.FileSpec
-import com.squareup.kotlinpoet.FunSpec
-import com.squareup.kotlinpoet.TypeSpec
-import me.lekov.parsekt.annotations.ParseClass
+import com.squareup.kotlinpoet.*
+import me.lekov.parsekt.annotations.ParseClassName
 import java.io.File
 import javax.annotation.processing.AbstractProcessor
 import javax.annotation.processing.RoundEnvironment
@@ -17,7 +15,7 @@ import javax.lang.model.element.TypeElement
 class ParseProcessor : AbstractProcessor() {
 
     override fun getSupportedAnnotationTypes(): MutableSet<String> {
-        return mutableSetOf(ParseClass::class.java.canonicalName)
+        return mutableSetOf(ParseClassName::class.java.canonicalName)
     }
 
     override fun getSupportedSourceVersion(): SourceVersion {
@@ -34,7 +32,7 @@ class ParseProcessor : AbstractProcessor() {
             processingEnv.options[KAPT_KOTLIN_GENERATED_OPTION_NAME]
                 ?: return false
 
-        val parseClasses = roundEnvironment?.getElementsAnnotatedWith(ParseClass::class.java)
+        val parseClasses = roundEnvironment?.getElementsAnnotatedWith(ParseClassName::class.java)
 
         if (parseClasses?.isEmpty() != false) {
             return true
@@ -43,9 +41,10 @@ class ParseProcessor : AbstractProcessor() {
         val parseClass = TypeSpec.enumBuilder("ParseClasses")
             .primaryConstructor(
                 FunSpec.constructorBuilder()
-                    .addParameter("name", String::class)
+                    .addParameter("parseName", String::class, KModifier.PUBLIC)
                     .build()
             )
+            .addProperty(PropertySpec.builder("parseName", String::class).initializer("parseName").build())
 
         parseClass.addEnumConstant(
             "ParseUser", TypeSpec.anonymousClassBuilder()
@@ -61,7 +60,7 @@ class ParseProcessor : AbstractProcessor() {
                 parseClass.addEnumConstant(
                     className, TypeSpec.anonymousClassBuilder()
                         .addSuperclassConstructorParameter(
-                            "%S", it.getAnnotation(ParseClass::class.java).value
+                            "%S", it.getAnnotation(ParseClassName::class.java).value
                         )
                         .build()
                 )
