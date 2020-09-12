@@ -3,8 +3,8 @@ package me.lekov.parsekt.types
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import kotlinx.serialization.json.Json
+import me.lekov.parsekt.api.LocalDateTimeSerializer
 import me.lekov.parsekt.api.ParseApi
-import me.lekov.parsekt.serializers.LocalDateTimeSerializer
 import java.time.LocalDateTime
 
 open class ParseClassCompanion {
@@ -23,7 +23,7 @@ open class ParseClassCompanion {
 open class ParseObject<T> {
 
     val className: String get() = ParseClasses.valueOf(this::class.simpleName!!).name
-
+    
     var objectId: String? = null
 
     @Serializable(with = LocalDateTimeSerializer::class)
@@ -55,4 +55,5 @@ open class ParseObject<T> {
     companion object : ParseClassCompanion()
 }
 
+@Serializable
 open class ParseClass : ParseObject<ParseClass>()

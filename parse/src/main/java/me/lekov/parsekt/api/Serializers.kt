@@ -1,4 +1,4 @@
-package me.lekov.parsekt.serializers
+package me.lekov.parsekt.api
 
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.MapSerializer

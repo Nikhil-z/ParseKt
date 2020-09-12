@@ -1,7 +1,6 @@
 package me.lekov.parsekt.api
 
 import kotlinx.serialization.Serializable
-import me.lekov.parsekt.serializers.LocalDateTimeSerializer
 import me.lekov.parsekt.types.ParseObject
 import java.time.LocalDateTime
 

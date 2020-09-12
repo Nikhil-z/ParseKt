@@ -10,9 +10,9 @@ import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
 import me.lekov.parsekt.api.FindResponse
+import me.lekov.parsekt.api.LocalDateTimeQuerySerializer
 import me.lekov.parsekt.api.Options
 import me.lekov.parsekt.api.ParseApi
-import me.lekov.parsekt.serializers.LocalDateTimeQuerySerializer
 import me.lekov.parsekt.types.QueryComparator.*
 import org.intellij.lang.annotations.RegExp
 import java.time.LocalDateTime

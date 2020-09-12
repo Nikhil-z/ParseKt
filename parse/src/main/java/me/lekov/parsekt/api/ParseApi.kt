@@ -16,7 +16,6 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.contextual
 import me.lekov.parsekt.Parse
-import me.lekov.parsekt.serializers.LocalDateTimeSerializer
 import me.lekov.parsekt.types.ParseError
 import me.lekov.parsekt.types.ParseObject
 import me.lekov.parsekt.types.ParseUser
