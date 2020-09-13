@@ -1,35 +1,24 @@
 package me.lekov.parsekt.types
 
 import io.ktor.http.*
-import kotlinx.serialization.*
-import kotlinx.serialization.builtins.ListSerializer
-import kotlinx.serialization.builtins.MapSerializer
-import kotlinx.serialization.builtins.serializer
-import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.Contextual
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.modules.SerializersModule
-import kotlinx.serialization.modules.contextual
-import me.lekov.parsekt.api.FindResponse
-import me.lekov.parsekt.api.LocalDateTimeQuerySerializer
-import me.lekov.parsekt.api.Options
-import me.lekov.parsekt.api.ParseApi
+import me.lekov.parsekt.api.*
 import me.lekov.parsekt.types.QueryComparator.*
 import org.intellij.lang.annotations.RegExp
 import java.time.LocalDateTime
-import kotlin.collections.set
 
-data class QueryConstraint(
+internal data class QueryConstraint(
     val key: String,
     val value: Any,
     val comparator: String
 )
 
-enum class QueryComparator(val operator: String) {
+internal enum class QueryComparator(val operator: String) {
     Or("\$or"),
     And("\$and"),
     Not("\$not"),
@@ -276,72 +265,3 @@ class ParseQuery internal constructor(@PublishedApi internal val query: Builder)
     }
 }
 
-object QueryConstraintsSerializer :
-    KSerializer<MutableList<QueryConstraint>> {
-
-    override fun serialize(
-        encoder: Encoder,
-        value: MutableList<QueryConstraint>
-    ) {
-
-        val json = Json {
-            serializersModule = SerializersModule {
-                contextual(LocalDateTimeQuerySerializer)
-            }
-        }
-
-        val groupedIterable = value.groupBy { it.key }.asIterable()
-
-        if (value.any { it.key == "\$or" || it.key == "\$and" }) {
-            val nestedQueries = value.first { it.key == "\$or" || it.key == "\$and" }
-            encoder.encodeSerializableValue(
-                MapSerializer(
-                    String.serializer(),
-                    ListSerializer(JsonElement.serializer()),
-                ), mapOf(nestedQueries.key to nestedQueries.value as ArrayList<JsonElement>)
-            )
-        } else {
-            val where = groupedIterable
-                .fold(mutableMapOf<String, Map<String, JsonElement>>()) { acc, entry ->
-                    acc[entry.key] = entry.value.associate {
-                        it.comparator to when (it.value) {
-                            is Number -> JsonPrimitive(it.value)
-                            is Boolean -> JsonPrimitive(it.value)
-                            is String -> JsonPrimitive(it.value)
-                            is LocalDateTime -> json.parseToJsonElement(json.encodeToString(it.value))
-                            is ParseClass -> json.parseToJsonElement(
-                                json.encodeToString(
-                                    ParsePointer(it.value)
-                                )
-                            )
-                            is ParseUser -> json.parseToJsonElement(
-                                json.encodeToString(
-                                    ParsePointer(
-                                        it.value
-                                    )
-                                )
-                            )
-                            else -> json.encodeToJsonElement(
-                                ListSerializer(JsonElement.serializer()),
-                                it.value as List<JsonElement>
-                            )
-                        }
-                    }
-
-                    acc
-                }
-
-            encoder.encodeSerializableValue(
-                JsonElement.serializer(),
-                Json.encodeToJsonElement(where)
-            )
-        }
-    }
-
-    override val descriptor: SerialDescriptor
-        get() = JsonElement.serializer().descriptor
-
-    override fun deserialize(decoder: Decoder): MutableList<QueryConstraint> {
-        TODO("Not yet implemented")
-    }
-}

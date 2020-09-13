@@ -1,24 +1,17 @@
 package me.lekov.parsekt.types
 
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.Serializer
-import kotlinx.serialization.builtins.MapSerializer
-import kotlinx.serialization.builtins.serializer
-import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.descriptors.mapSerialDescriptor
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.Serializable
+import me.lekov.parsekt.api.ACLSerializer
 
 
 enum class Access { read, write }
 
-inline class Role(private val roleName: String) {
+class Role(private val roleName: String) {
     fun name() = "role:$roleName"
 }
 
-class ACL {
-
-    private var acl: MutableMap<String, MutableMap<String, Boolean>>? = null
+@Serializable(with = ACLSerializer::class)
+class ACL(internal var acl: MutableMap<String, MutableMap<String, Boolean>>? = null) {
 
     var publicRead: Boolean
         get() = get(publicScope, Access.read)
@@ -81,37 +74,6 @@ class ACL {
 
     }
 
-    @Serializer(forClass = ACL::class)
-    object ACLSerializer : KSerializer<ACL> {
-        override val descriptor: SerialDescriptor =
-            mapSerialDescriptor<String, Map<String, Boolean>>()
-
-        override fun deserialize(decoder: Decoder): ACL {
-            val res = decoder.decodeSerializableValue(
-                MapSerializer(
-                    String.serializer(),
-                    MapSerializer(String.serializer(), Boolean.serializer())
-                )
-            )
-            val mutable = mutableMapOf<String, MutableMap<String, Boolean>>()
-            for (entry in res.entries) {
-                mutable[entry.key] = entry.value.toMutableMap()
-            }
-
-            return ACL().apply {
-                acl = mutable
-            }
-        }
-
-        override fun serialize(encoder: Encoder, value: ACL) {
-            encoder.encodeNullableSerializableValue(
-                MapSerializer(
-                    String.serializer(),
-                    MapSerializer(String.serializer(), Boolean.serializer())
-                ), value.acl
-            )
-        }
-    }
 
     companion object {
         const val publicScope = "*"
