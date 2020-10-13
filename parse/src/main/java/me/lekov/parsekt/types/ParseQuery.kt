@@ -12,7 +12,7 @@ import me.lekov.parsekt.types.QueryComparator.*
 import org.intellij.lang.annotations.RegExp
 import java.time.LocalDateTime
 
-internal data class QueryConstraint(
+data class QueryConstraint(
     val key: String,
     val value: Any,
     val comparator: String

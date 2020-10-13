@@ -23,7 +23,7 @@ open class ParseClassCompanion {
 @Serializable
 open class ParseObject<T> {
 
-    val className: String get() = ParseClasses.valueOf(this::class.simpleName!!).name
+    val className: String get() = ParseClasses.valueOf(this::class.simpleName!!).parseName
 
     var objectId: String? = null
 
