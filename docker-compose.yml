@@ -1,0 +1,34 @@
+version: '3.5'
+services:
+
+    mongo:
+        image: mongo
+        ports:
+            - 27017:27017
+        volumes:
+            - ./data-db:/data/db
+    parse:
+        image: parseplatform/parse-server
+        ports:
+            - 1337:1337
+        links:
+            - mongo
+        environment:
+            - PARSE_SERVER_APPLICATION_ID=appId
+            - PARSE_SERVER_MASTER_KEY=masterKey
+            - PARSE_SERVER_DATABASE_URI=mongodb://mongo:27017/dev
+            - VERBOSE=1
+            - PARSE_SERVER_START_LIVE_QUERY_SERVER=1
+            - PARSE_SERVER_LIVE_QUERY={"classNames":["GameScore","_User"]}
+    dashboard:
+        image: parseplatform/parse-dashboard
+        ports:
+            - 4040:4040
+        environment:
+            - PARSE_DASHBOARD_SERVER_URL=http://localhost:1337/parse
+            - PARSE_DASHBOARD_APP_ID=appId
+            - PARSE_DASHBOARD_MASTER_KEY=masterKey
+            - PARSE_DASHBOARD_APP_NAME=Application
+            - PARSE_DASHBOARD_ALLOW_INSECURE_HTTP=1
+            - PARSE_DASHBOARD_USER_ID=user
+            - PARSE_DASHBOARD_USER_PASSWORD=pass
