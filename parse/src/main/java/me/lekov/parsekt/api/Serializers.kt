@@ -9,16 +9,11 @@ import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.mapSerialDescriptor
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.encodeToJsonElement
-import kotlinx.serialization.modules.SerializersModule
-import kotlinx.serialization.modules.contextual
-import me.lekov.parsekt.types.*
+import kotlinx.serialization.json.*
+import me.lekov.parsekt.types.ACL
+import me.lekov.parsekt.types.QueryConstraint
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -91,6 +86,7 @@ object ACLSerializer : KSerializer<ACL> {
     }
 }
 
+
 object QueryConstraintsSerializer :
     KSerializer<MutableList<QueryConstraint>> {
 
@@ -99,58 +95,55 @@ object QueryConstraintsSerializer :
         value: MutableList<QueryConstraint>
     ) {
 
-        val json = Json {
-            serializersModule = SerializersModule {
-                contextual(LocalDateTimeQuerySerializer)
-            }
-        }
-
         val groupedIterable = value.groupBy { it.key }.asIterable()
+        val elements = arrayListOf<JsonElement>()
 
         if (value.any { it.key == "\$or" || it.key == "\$and" }) {
             val nestedQueries = value.first { it.key == "\$or" || it.key == "\$and" }
-            encoder.encodeSerializableValue(
+            val encodedNested = Json.encodeToJsonElement(
                 MapSerializer(
                     String.serializer(),
                     ListSerializer(JsonElement.serializer()),
-                ), mapOf(nestedQueries.key to nestedQueries.value as ArrayList<JsonElement>)
+                ), mapOf(nestedQueries.key to nestedQueries.value as JsonArray)
             )
-        } else {
-            val where = groupedIterable
-                .fold(mutableMapOf<String, Map<String, JsonElement>>()) { acc, entry ->
-                    acc[entry.key] = entry.value.associate {
-                        it.comparator to when (it.value) {
-                            is Number -> JsonPrimitive(it.value)
-                            is Boolean -> JsonPrimitive(it.value)
-                            is String -> JsonPrimitive(it.value)
-                            is LocalDateTime -> json.parseToJsonElement(json.encodeToString(it.value))
-                            is ParseClass -> json.parseToJsonElement(
-                                json.encodeToString(
-                                    ParsePointer(it.value)
-                                )
-                            )
-                            is ParseUser -> json.parseToJsonElement(
-                                json.encodeToString(
-                                    ParsePointer(
-                                        it.value
-                                    )
-                                )
-                            )
-                            else -> json.encodeToJsonElement(
-                                ListSerializer(JsonElement.serializer()),
-                                it.value as List<JsonElement>
-                            )
-                        }
-                    }
 
-                    acc
+            elements.add(encodedNested)
+        }
+
+        if (value.any { it.key == "\$relatedTo" }) {
+            val nestedQueries = value.first { it.key == "\$relatedTo" }
+            val encodedNested = Json.encodeToJsonElement(
+                MapSerializer(
+                    String.serializer(),
+                    JsonElement.serializer(),
+                ), mapOf(nestedQueries.key to nestedQueries.value)
+            )
+
+            elements.add(encodedNested)
+        }
+
+        val where = groupedIterable.filter { it.key != "\$or" &&  it.key != "\$and" && it.key != "\$relatedTo" }
+            .fold(mutableMapOf<String, Map<String, JsonElement>>()) { acc, entry ->
+                acc[entry.key] = entry.value.associate {
+                    it.comparator to it.value
                 }
 
-            encoder.encodeSerializableValue(
-                JsonElement.serializer(),
-                Json.encodeToJsonElement(where)
-            )
+                acc
+            }
+
+        val encodedNested = Json.encodeToJsonElement(where)
+        elements.add(encodedNested)
+
+
+        val result = buildJsonObject {
+            elements.forEach { element ->
+                element.jsonObject.keys.forEach {
+                    element.jsonObject[it]?.let { data -> this.put(it, data) }
+                }
+            }
         }
+
+        encoder.encodeSerializableValue(JsonElement.serializer(), result)
     }
 
     override val descriptor: SerialDescriptor
