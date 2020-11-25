@@ -8,6 +8,6 @@ repositories {
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation project(':annotations')
-    api 'com.squareup:kotlinpoet:1.6.0'
+    api 'com.squareup:kotlinpoet:1.7.1'
 
 }
