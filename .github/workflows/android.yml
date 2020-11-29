@@ -25,4 +25,5 @@ jobs:
       if: github.ref == 'refs/heads/master'
       uses: peaceiris/actions-gh-pages@v3.7.3
       with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: "./parse/build/dokka/html"
