@@ -42,7 +42,7 @@ class ParseApi {
     sealed class Option {
         object UseMasterKey : Option()
         class SessionToken(val token: String) : Option()
-        class InstallationId(val instalattion: String) : Option()
+        class InstallationId(val installation: String) : Option()
     }
 
     @KtorExperimentalAPI
@@ -52,9 +52,8 @@ class ParseApi {
         val params: Map<String, String>? = emptyMap(),
         val body: T? = null,
         var mapper: (String) -> U,
-        val serializers: SerializersModule? = null
-    ) {
-        val httpClient = HttpClient(CIO) {
+        val serializers: SerializersModule? = null,
+        var httpClient: HttpClient = HttpClient(CIO) {
             install(WebSockets)
             install(HttpCache)
             install(JsonFeature) {
@@ -74,7 +73,7 @@ class ParseApi {
                     })
             }
         }
-
+    ) {
         suspend inline fun execute(options: Options = emptySet()): U {
 
             val result = kotlin.runCatching {
@@ -154,7 +153,7 @@ class ParseApi {
                         headers["X-Parse-Session-Token"] = it.token
                     }
                     is Option.InstallationId -> {
-                        headers["X-Parse-Installation-Id"] = it.instalattion
+                        headers["X-Parse-Installation-Id"] = it.installation
                     }
                 }
             }
