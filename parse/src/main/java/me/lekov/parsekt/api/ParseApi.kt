@@ -221,10 +221,24 @@ class ParseApi {
     }
 }
 
+/**
+ * Save
+ *
+ * @param T
+ * @param options
+ * @return
+ */
 suspend inline fun <reified T : ParseObject<T>> ParseObject<T>.save(options: Options = emptySet()): ParseObject<T> {
     return ParseApi.saveCommand(this as T).execute(options)
 }
 
+/**
+ * Fetch
+ *
+ * @param T
+ * @param options
+ * @return
+ */
 suspend inline fun <reified T : ParseObject<T>> ParseObject<T>.fetch(options: Options = emptySet()): ParseObject<T> {
     return ParseApi.fetchCommand(this as T).execute(options)
 }

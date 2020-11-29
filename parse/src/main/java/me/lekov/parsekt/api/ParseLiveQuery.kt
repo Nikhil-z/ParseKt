@@ -25,7 +25,8 @@ import java.util.Collections.synchronizedMap
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.collections.set
 
-class ParseLiveQuery private constructor(@PublishedApi internal val client: HttpClient) {
+@PublishedApi
+internal class ParseLiveQuery private constructor(@PublishedApi internal val client: HttpClient) {
 
     private val clients: MutableMap<Int, ParseSubscription> = synchronizedMap(HashMap<Int, ParseSubscription>())
     var webSocketSession: WebSocketSession? = null
@@ -137,7 +138,7 @@ class ParseLiveQuery private constructor(@PublishedApi internal val client: Http
     }
 }
 
-class ParseSubscription(
+private class ParseSubscription(
     private val session: WebSocketSession,
     val className: String,
     private val query: ParseQuery.Builder

@@ -3,6 +3,11 @@ package me.lekov.parsekt
 import android.content.Context
 import me.lekov.parsekt.store.ParseStore
 
+/**
+ * Parse
+ *
+ * @constructor Create empty Parse
+ */
 object Parse {
     internal lateinit var context: Context
     internal lateinit var applicationId: String
@@ -11,6 +16,16 @@ object Parse {
     lateinit var serverUrl: String
     lateinit var storage: ParseStore
 
+    /**
+     * Initialize
+     *
+     * @param context
+     * @param applicationId
+     * @param clientKey
+     * @param masterKey
+     * @param serverUrl
+     * @param storage
+     */
     fun initialize(
         context: Context,
         applicationId: String,

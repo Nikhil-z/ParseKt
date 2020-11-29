@@ -2,6 +2,13 @@ package me.lekov.parsekt.types
 
 import kotlinx.serialization.Serializable
 
+/**
+ * Parse error
+ *
+ * @property code
+ * @property error
+ * @constructor Create empty Parse error
+ */
 @Serializable
 data class ParseError(val code: Int, val error: String? = null) : Error() {
     companion object {

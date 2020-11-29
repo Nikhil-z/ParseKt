@@ -9,6 +9,11 @@ import me.lekov.parsekt.api.ParseApi
 import me.lekov.parsekt.store.ParseStore
 import me.lekov.parsekt.store.SecureStore
 
+/**
+ * Parse user
+ *
+ * @constructor Create empty Parse user
+ */
 @Serializable
 @ParseClassName("_User")
 open class ParseUser : ParseObject<ParseUser>() {
@@ -19,6 +24,11 @@ open class ParseUser : ParseObject<ParseUser>() {
     @PublishedApi
     internal var password: String? = null
 
+    /**
+     * Companion
+     *
+     * @constructor Create empty Companion
+     */
     companion object : ParseClassCompanion() {
 
         @Serializable
@@ -95,6 +105,10 @@ open class ParseUser : ParseObject<ParseUser>() {
     }
 
 
+    /**
+     * Logout
+     *
+     */
     suspend fun logout() {
         return logoutCommand().execute(emptySet())
     }
@@ -104,10 +118,26 @@ open class ParseUser : ParseObject<ParseUser>() {
     }
 }
 
+/**
+ * Login
+ *
+ * @param T
+ * @param username
+ * @param password
+ * @return
+ */
 suspend inline fun <reified T : ParseUser> T.login(username: String, password: String): T {
     return loginCommand<T>(username, password).execute(emptySet())
 }
 
+/**
+ * Signup
+ *
+ * @param T
+ * @param username
+ * @param password
+ * @return
+ */
 suspend inline fun <reified T : ParseUser> T.signup(username: String, password: String): T {
     return signupCommand<T>(username, password).execute(emptySet())
 }

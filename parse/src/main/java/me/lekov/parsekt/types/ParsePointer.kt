@@ -3,8 +3,16 @@ package me.lekov.parsekt.types
 import kotlinx.serialization.Required
 import kotlinx.serialization.Serializable
 
+/**
+ * Parse pointer
+ *
+ * @property __type
+ * @property className
+ * @property objectId
+ * @constructor Create empty Parse pointer
+ */
 @Serializable
-data class ParsePointer(
+internal data class ParsePointer(
     @Required
     private val __type: String = "Pointer",
     var className: String? = null,

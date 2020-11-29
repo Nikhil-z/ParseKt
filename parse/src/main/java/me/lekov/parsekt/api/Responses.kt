@@ -51,7 +51,12 @@ data class LoginSignUpResponse(
 }
 
 @Serializable
-data class FindResponse<T: ParseObject<T>>(val results: List<T>? = null, val count: Int? = null)
+data class FindResponse<T : ParseObject<T>>(val results: List<T>? = null, val count: Int? = null)
 
 @Serializable
-data class LiveQueryResponse<T: ParseObject<T>>(val op: String, val requestId: Int, val `object`: T, val clientId: String)
+data class LiveQueryResponse<T : ParseObject<T>>(
+    val op: String,
+    val requestId: Int,
+    val `object`: T,
+    val clientId: String
+)

@@ -3,6 +3,14 @@ package me.lekov.parsekt.types
 import kotlinx.serialization.Required
 import kotlinx.serialization.Serializable
 
+/**
+ * Parse geo point
+ *
+ * @property __type
+ * @property latitude
+ * @property longitude
+ * @constructor Create empty Parse geo point
+ */
 @Serializable
 data class ParseGeoPoint(
     @Required

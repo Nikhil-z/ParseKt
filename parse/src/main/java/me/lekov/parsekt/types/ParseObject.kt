@@ -8,6 +8,11 @@ import me.lekov.parsekt.api.LocalDateTimeSerializer
 import me.lekov.parsekt.api.ParseApi
 import java.time.LocalDateTime
 
+/**
+ * Parse class companion
+ *
+ * @constructor Create empty Parse class companion
+ */
 open class ParseClassCompanion {
     fun query(builder: ParseQuery.Builder.() -> Unit): ParseQuery {
         return ParseQuery(ParseQuery.Builder().apply(builder))
@@ -20,6 +25,12 @@ open class ParseClassCompanion {
         }
 }
 
+/**
+ * Parse object
+ *
+ * @param T
+ * @constructor Create empty Parse object
+ */
 @Serializable
 open class ParseObject<T> {
 
@@ -33,6 +44,7 @@ open class ParseObject<T> {
     @Serializable(with = LocalDateTimeSerializer::class)
     var updatedAt: LocalDateTime? = null
 
+
     @Serializable(with = ACLSerializer::class)
     var ACL: ACL? = null
 
@@ -45,6 +57,13 @@ open class ParseObject<T> {
     @PublishedApi
     internal val isSaved = objectId != null
 
+    /**
+     * Has same object id
+     *
+     * @param T
+     * @param other
+     * @return
+     */
     inline fun <reified T : ParseObject<T>> hasSameObjectId(other: T): Boolean {
         return this.className == other.className && this.objectId == other.objectId
     }
@@ -56,5 +75,10 @@ open class ParseObject<T> {
     companion object : ParseClassCompanion()
 }
 
+/**
+ * Parse class
+ *
+ * @constructor Create empty Parse class
+ */
 @Serializable
 open class ParseClass : ParseObject<ParseClass>()
