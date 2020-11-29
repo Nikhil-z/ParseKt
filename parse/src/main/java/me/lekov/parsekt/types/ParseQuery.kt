@@ -1,7 +1,9 @@
 package me.lekov.parsekt.types
 
+import android.util.Log
 import androidx.annotation.VisibleForTesting
 import io.ktor.http.*
+import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -13,6 +15,7 @@ import kotlinx.serialization.modules.polymorphic
 import me.lekov.parsekt.api.*
 import me.lekov.parsekt.types.QueryComparator.*
 import java.time.LocalDateTime
+import kotlin.coroutines.coroutineContext
 
 @Serializable
 data class QueryConstraint(
@@ -174,6 +177,31 @@ class ParseQuery internal constructor(@PublishedApi internal val query: Builder)
             }).execute(options)
     }
 
+    suspend inline fun <reified T : ParseObject<T>> subscribe(): Flow<List<T>> {
+        val className = ParseClasses.valueOf(T::class.simpleName!!).name
+        val items = find<T>()
+
+        return ParseLiveQuery.Command(
+            ParseApi.Endpoint.Other(className),
+            query,
+            mapper = {
+                val res = Json {
+                    encodeDefaults = false
+                    ignoreUnknownKeys = true
+                }.decodeFromString<LiveQueryResponse<T>>(it)
+                res
+            },
+            SerializersModule {
+                contextual(LocalDateTime::class, LocalDateTimeQuerySerializer)
+                polymorphic(Any::class) {
+                    subclass(Int::class, Int.serializer())
+                    subclass(Boolean::class, Boolean.serializer())
+                }
+            },
+            items.toMutableList(),
+        ).subscribe()
+    }
+
     @Serializable
     class Builder {
         var limit: Int = 100
@@ -318,7 +346,9 @@ class ParseQuery internal constructor(@PublishedApi internal val query: Builder)
         }
 
         fun withinGeoBox(key: String, southWest: ParseGeoPoint, northEast: ParseGeoPoint) {
-            Within.attachFor(key, buildJsonObject { put(Box.operator, Json.encodeToJsonElement(arrayListOf(southWest, northEast))) })
+            Within.attachFor(
+                key,
+                buildJsonObject { put(Box.operator, Json.encodeToJsonElement(arrayListOf(southWest, northEast))) })
         }
 
         fun withinPolygon(key: String, polygon: List<ParseGeoPoint>) {

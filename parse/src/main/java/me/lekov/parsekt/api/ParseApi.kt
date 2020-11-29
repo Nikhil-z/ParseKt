@@ -6,13 +6,16 @@ import io.ktor.client.features.*
 import io.ktor.client.features.cache.*
 import io.ktor.client.features.json.*
 import io.ktor.client.features.json.serializer.*
+import io.ktor.client.features.websocket.*
 import io.ktor.client.request.*
 import io.ktor.http.*
+import io.ktor.http.cio.websocket.*
+import io.ktor.util.*
 import io.ktor.util.network.*
 import io.ktor.utils.io.*
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.*
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.contextual
 import me.lekov.parsekt.Parse
@@ -42,6 +45,7 @@ class ParseApi {
         class InstallationId(val instalattion: String) : Option()
     }
 
+    @KtorExperimentalAPI
     data class Command<T, U>(
         val method: HttpMethod,
         val path: Endpoint,
@@ -51,6 +55,7 @@ class ParseApi {
         val serializers: SerializersModule? = null
     ) {
         val httpClient = HttpClient(CIO) {
+            install(WebSockets)
             install(HttpCache)
             install(JsonFeature) {
                 serializer =
