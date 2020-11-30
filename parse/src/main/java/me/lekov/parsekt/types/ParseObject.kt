@@ -3,11 +3,9 @@ package me.lekov.parsekt.types
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import kotlinx.serialization.json.Json
-import me.lekov.parsekt.api.ACLSerializer
-import me.lekov.parsekt.api.LocalDateTimeSerializer
-import me.lekov.parsekt.api.Operation
-import me.lekov.parsekt.api.ParseApi
+import me.lekov.parsekt.api.*
 import java.time.LocalDateTime
+import kotlin.math.abs
 
 /**
  * Parse class companion
@@ -35,11 +33,10 @@ open class ParseClassCompanion {
 @Serializable
 open class ParseObject<T> {
 
-    private var operations = mutableListOf<Operation>()
+    internal var operations = mutableMapOf<String, Operation>()
     val className: String get() = ParseClasses.valueOf(this::class.simpleName!!).parseName
 
     var objectId: String? = null
-        internal set
 
     @Serializable(with = LocalDateTimeSerializer::class)
     var createdAt: LocalDateTime? = null
@@ -69,6 +66,18 @@ open class ParseObject<T> {
      */
     inline fun <reified T : ParseObject<T>> hasSameObjectId(other: T): Boolean {
         return this.className == other.className && this.objectId == other.objectId
+    }
+
+    fun delete(key: String) {
+        this.operations[key] = DeleteOperation()
+    }
+
+    fun increment(key: String, amount: Int) {
+        this.operations[key] = IncrementOperation(amount)
+    }
+
+    fun decrement(key: String, amount: Int) {
+        this.operations[key] = IncrementOperation(-abs(amount))
     }
 
     override fun toString(): String {

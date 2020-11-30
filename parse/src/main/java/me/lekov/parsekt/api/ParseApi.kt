@@ -19,9 +19,7 @@ import kotlinx.serialization.json.*
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.contextual
 import me.lekov.parsekt.Parse
-import me.lekov.parsekt.types.ParseError
-import me.lekov.parsekt.types.ParseObject
-import me.lekov.parsekt.types.ParseUser
+import me.lekov.parsekt.types.*
 import java.time.LocalDateTime
 import kotlin.collections.set
 
@@ -203,6 +201,18 @@ class ParseApi {
         }
 
         @PublishedApi
+        internal fun <T : ParseObject<T>> deleteCommand(item: T): Command<T, Any> {
+            return Command(
+                HttpMethod.Delete,
+                item.endpoint,
+                body = null,
+                mapper = {},
+                serializers = SerializersModule {
+                    contextual(LocalDateTime::class, LocalDateTimeSerializer)
+                })
+        }
+
+        @PublishedApi
         internal inline fun <reified T : ParseObject<T>> fetchCommand(item: T): Command<T, T> {
 
             if (!item.isSaved) {
@@ -240,4 +250,25 @@ suspend inline fun <reified T : ParseObject<T>> ParseObject<T>.save(options: Opt
  */
 suspend inline fun <reified T : ParseObject<T>> ParseObject<T>.fetch(options: Options = emptySet()): ParseObject<T> {
     return ParseApi.fetchCommand(this as T).execute(options)
+}
+
+/**
+ * Delete
+ *
+ * @param T
+ * @param options
+ */
+suspend inline fun <reified T : ParseObject<T>> ParseObject<T>.delete(options: Options = emptySet()) {
+    ParseApi.deleteCommand(this as T).execute(options)
+}
+
+/**
+ * Relation
+ *
+ * @param T
+ * @param key
+ * @return
+ */
+inline fun <reified T : ParseObject<T>> ParseObject<T>.relation(key: String): ParseQuery.Builder {
+    return ParseObject.query { related(key, this@relation as ParseObject<Any>) }.query
 }

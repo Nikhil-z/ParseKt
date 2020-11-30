@@ -16,7 +16,7 @@ internal data class AddUniqueOperation<T>(val objects: List<T>) : Operation("Add
 internal data class AddRelationOperation(val objects: List<ParsePointer>) : Operation("AddRelation")
 
 @Serializable
-internal class DeleteOperation<T> : Operation("Delete")
+internal class DeleteOperation : Operation("Delete")
 
 @Serializable
 internal data class IncrementOperation(val amount: Int) : Operation("Increment")

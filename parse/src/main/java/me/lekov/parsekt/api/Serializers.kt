@@ -13,6 +13,7 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.*
 import me.lekov.parsekt.types.ACL
+import me.lekov.parsekt.types.ParsePointer
 import me.lekov.parsekt.types.QueryConstraint
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -86,6 +87,28 @@ object ACLSerializer : KSerializer<ACL> {
     }
 }
 
+object ParsePointerSerializer: KSerializer<ParsePointer> {
+    override val descriptor: SerialDescriptor
+        get() = JsonObject.serializer().descriptor
+
+    override fun deserialize(decoder: Decoder): ParsePointer {
+        val jsonObject = decoder.decodeSerializableValue(JsonObject.serializer())
+
+        return if (jsonObject["__type"]!!.jsonPrimitive.content == "Pointer") {
+            ParsePointer(className = jsonObject["className"]!!.jsonPrimitive.content, objectId = jsonObject["objectId"]!!.jsonPrimitive.content)
+        } else {
+            ParsePointer(__type = "Object", className = jsonObject["className"]!!.jsonPrimitive.content, objectId = jsonObject["objectId"]!!.jsonPrimitive.content, `object` = jsonObject)
+        }
+    }
+
+    override fun serialize(encoder: Encoder, value: ParsePointer) {
+        encoder.encodeSerializableValue(JsonObject.serializer(), buildJsonObject {
+            put("__type", "Pointer")
+            put("className", value.className)
+            put("objectId", value.objectId)
+        })
+    }
+}
 
 object QueryConstraintsSerializer :
     KSerializer<MutableList<QueryConstraint>> {

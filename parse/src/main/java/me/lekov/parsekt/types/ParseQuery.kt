@@ -456,7 +456,7 @@ class ParseQuery internal constructor(@PublishedApi internal val query: Builder)
          * @param key
          * @param parent
          */
-        fun related(key: String, parent: ParseClass) {
+        fun related(key: String, parent: ParseObject<*>) {
             constraints.add(QueryConstraint(RelatedTo.operator, buildJsonObject {
                 put("object", Json.encodeToJsonElement(ParsePointer(parent)))
                 put("key", key)

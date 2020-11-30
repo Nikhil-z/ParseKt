@@ -4,7 +4,6 @@ import androidx.test.core.app.ApplicationProvider
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import me.lekov.parsekt.annotations.ParseClassName
-import me.lekov.parsekt.store.ParseStore
 import me.lekov.parsekt.types.ParseClass
 import me.lekov.parsekt.types.ParseClassCompanion
 import me.lekov.parsekt.types.ParseGeoPoint
@@ -32,7 +31,7 @@ class ParseQueryUnitTest {
 
 
     @ParseClassName("GameType")
-    class GameType() : ParseClass() {
+    class GameType : ParseClass() {
         companion object : ParseClassCompanion()
     }
 
