@@ -44,8 +44,7 @@ class ParseQueryUnitTest {
             "appId",
             null,
             "masterKey",
-            "http://127.0.0.1:1337/parse",
-            ParseStore()
+            "http://127.0.0.1:1337/parse"
         )
     }
 
@@ -132,7 +131,10 @@ class ParseQueryUnitTest {
     fun testWhereKeyExists() {
         GameScore.query {
             exists("score")
-            Assert.assertEquals("{\"where\":{\"score\":{\"\$exists\":true}}}", json.encodeToString(this))
+            Assert.assertEquals(
+                "{\"where\":{\"score\":{\"\$exists\":true}}}",
+                json.encodeToString(this)
+            )
         }
     }
 
@@ -140,7 +142,10 @@ class ParseQueryUnitTest {
     fun testWhereKeyDoesNotExists() {
         GameScore.query {
             notExists("score")
-            Assert.assertEquals("{\"where\":{\"score\":{\"\$exists\":false}}}", json.encodeToString(this))
+            Assert.assertEquals(
+                "{\"where\":{\"score\":{\"\$exists\":false}}}",
+                json.encodeToString(this)
+            )
         }
     }
 
@@ -175,7 +180,10 @@ class ParseQueryUnitTest {
     fun testWhereLessThanOrEqualTo() {
         GameScore.query {
             lessThanOrEqualTo("score", 100)
-            Assert.assertEquals("{\"where\":{\"score\":{\"\$lte\":100}}}", json.encodeToString(this))
+            Assert.assertEquals(
+                "{\"where\":{\"score\":{\"\$lte\":100}}}",
+                json.encodeToString(this)
+            )
         }
     }
 
@@ -191,7 +199,10 @@ class ParseQueryUnitTest {
     fun testWhereGreaterThanOrEqualTo() {
         GameScore.query {
             greaterThanOrEqualTo("score", 100)
-            Assert.assertEquals("{\"where\":{\"score\":{\"\$gte\":100}}}", json.encodeToString(this))
+            Assert.assertEquals(
+                "{\"where\":{\"score\":{\"\$gte\":100}}}",
+                json.encodeToString(this)
+            )
         }
     }
 
@@ -210,7 +221,10 @@ class ParseQueryUnitTest {
     fun testWhereMatchesRegex() {
         GameScore.query {
             match("name", "Habibi")
-            Assert.assertEquals("{\"where\":{\"name\":{\"\$regex\":\"Habibi\"}}}", json.encodeToString(this))
+            Assert.assertEquals(
+                "{\"where\":{\"name\":{\"\$regex\":\"Habibi\"}}}",
+                json.encodeToString(this)
+            )
         }
     }
 
@@ -218,7 +232,10 @@ class ParseQueryUnitTest {
     fun testWhereKeyContains() {
         GameScore.query {
             contains("name", "Habibi")
-            Assert.assertEquals("{\"where\":{\"name\":{\"\$regex\":\"\\\\QHabibi\\\\E\"}}}", json.encodeToString(this))
+            Assert.assertEquals(
+                "{\"where\":{\"name\":{\"\$regex\":\"\\\\QHabibi\\\\E\"}}}",
+                json.encodeToString(this)
+            )
         }
     }
 
@@ -249,7 +266,10 @@ class ParseQueryUnitTest {
         val or = GameScore.query { equalsTo(GameScore::score.name, 50) }
             .or(GameScore.query { equalsTo(GameScore::score.name, 100) })
 
-        Assert.assertEquals("{\"where\":{\"\$or\":[{\"score\":{\"\$eq\":50}},{\"score\":{\"\$eq\":100}}]}}", json.encodeToString(or.query))
+        Assert.assertEquals(
+            "{\"where\":{\"\$or\":[{\"score\":{\"\$eq\":50}},{\"score\":{\"\$eq\":100}}]}}",
+            json.encodeToString(or.query)
+        )
     }
 
     @Test
@@ -257,7 +277,10 @@ class ParseQueryUnitTest {
         val and = GameScore.query { equalsTo(GameScore::score.name, 50) }
             .and(GameScore.query { equalsTo(GameScore::score.name, 100) })
 
-        Assert.assertEquals("{\"where\":{\"\$and\":[{\"score\":{\"\$eq\":50}},{\"score\":{\"\$eq\":100}}]}}", json.encodeToString(and.query))
+        Assert.assertEquals(
+            "{\"where\":{\"\$and\":[{\"score\":{\"\$eq\":50}},{\"score\":{\"\$eq\":100}}]}}",
+            json.encodeToString(and.query)
+        )
     }
 
     @Test
@@ -266,16 +289,25 @@ class ParseQueryUnitTest {
             matchesKeyInQuery("type", "type", GameType.query { equalsTo("map", "Summons Rift") })
         }
 
-        Assert.assertEquals("{\"where\":{\"type\":{\"\$select\":{\"key\":\"type\",\"query\":{\"where\":{\"map\":{\"\$eq\":\"Summons Rift\"}}}}}}}", json.encodeToString(query.query))
+        Assert.assertEquals(
+            "{\"where\":{\"type\":{\"\$select\":{\"key\":\"type\",\"query\":{\"where\":{\"map\":{\"\$eq\":\"Summons Rift\"}}}}}}}",
+            json.encodeToString(query.query)
+        )
     }
 
     @Test
     fun testWhereKeyDoesNotMatchesInQuery() {
         val query = GameScore.query {
-            doesNotMatchesKeyInQuery("type", "type", GameType.query { equalsTo("map", "Summons Rift") })
+            doesNotMatchesKeyInQuery(
+                "type",
+                "type",
+                GameType.query { equalsTo("map", "Summons Rift") })
         }
 
-        Assert.assertEquals("{\"where\":{\"type\":{\"\$dontSelect\":{\"key\":\"type\",\"query\":{\"where\":{\"map\":{\"\$eq\":\"Summons Rift\"}}}}}}}", json.encodeToString(query.query))
+        Assert.assertEquals(
+            "{\"where\":{\"type\":{\"\$dontSelect\":{\"key\":\"type\",\"query\":{\"where\":{\"map\":{\"\$eq\":\"Summons Rift\"}}}}}}}",
+            json.encodeToString(query.query)
+        )
     }
 
     @Test
@@ -284,7 +316,10 @@ class ParseQueryUnitTest {
             matchesQuery("type", GameType.query { equalsTo("map", "Summons Rift") })
         }
 
-        Assert.assertEquals("{\"where\":{\"type\":{\"\$inQuery\":{\"where\":{\"map\":{\"\$eq\":\"Summons Rift\"}}}}}}", json.encodeToString(query.query))
+        Assert.assertEquals(
+            "{\"where\":{\"type\":{\"\$inQuery\":{\"where\":{\"map\":{\"\$eq\":\"Summons Rift\"}}}}}}",
+            json.encodeToString(query.query)
+        )
     }
 
     @Test
@@ -293,7 +328,10 @@ class ParseQueryUnitTest {
             notMatchesQuery("type", GameType.query { equalsTo("map", "Summons Rift") })
         }
 
-        Assert.assertEquals("{\"where\":{\"type\":{\"\$inQuery\":{\"where\":{\"map\":{\"\$eq\":\"Summons Rift\"}}}}}}", json.encodeToString(query.query))
+        Assert.assertEquals(
+            "{\"where\":{\"type\":{\"\$inQuery\":{\"where\":{\"map\":{\"\$eq\":\"Summons Rift\"}}}}}}",
+            json.encodeToString(query.query)
+        )
     }
 
     @Test
@@ -302,7 +340,10 @@ class ParseQueryUnitTest {
             containedIt("gender", listOf("Male", "Female", "Other"))
         }
 
-        Assert.assertEquals("{\"where\":{\"gender\":{\"\$in\":[\"Male\",\"Female\",\"Other\"]}}}", json.encodeToString(query.query))
+        Assert.assertEquals(
+            "{\"where\":{\"gender\":{\"\$in\":[\"Male\",\"Female\",\"Other\"]}}}",
+            json.encodeToString(query.query)
+        )
     }
 
     @Test
@@ -311,7 +352,10 @@ class ParseQueryUnitTest {
             notContainedIn("gender", listOf("Male", "Female", "Other"))
         }
 
-        Assert.assertEquals("{\"where\":{\"gender\":{\"\$nin\":[\"Male\",\"Female\",\"Other\"]}}}", json.encodeToString(query.query))
+        Assert.assertEquals(
+            "{\"where\":{\"gender\":{\"\$nin\":[\"Male\",\"Female\",\"Other\"]}}}",
+            json.encodeToString(query.query)
+        )
     }
 
     @Test
@@ -320,7 +364,10 @@ class ParseQueryUnitTest {
             containsAll("gender", listOf("Male", "Female", "Other"))
         }
 
-        Assert.assertEquals("{\"where\":{\"gender\":{\"\$all\":[\"Male\",\"Female\",\"Other\"]}}}", json.encodeToString(query.query))
+        Assert.assertEquals(
+            "{\"where\":{\"gender\":{\"\$all\":[\"Male\",\"Female\",\"Other\"]}}}",
+            json.encodeToString(query.query)
+        )
     }
 
     @Test
@@ -329,7 +376,10 @@ class ParseQueryUnitTest {
             related("type", GameType().also { it.objectId = "1234" })
         }
 
-        Assert.assertEquals("{\"where\":{\"\$relatedTo\":{\"object\":{\"__type\":\"Pointer\",\"className\":\"GameType\",\"objectId\":\"1234\"},\"key\":\"type\"}}}", json.encodeToString(query.query))
+        Assert.assertEquals(
+            "{\"where\":{\"\$relatedTo\":{\"object\":{\"__type\":\"Pointer\",\"className\":\"GameType\",\"objectId\":\"1234\"},\"key\":\"type\"}}}",
+            json.encodeToString(query.query)
+        )
     }
 
     @Test
@@ -339,17 +389,23 @@ class ParseQueryUnitTest {
             related("type", GameType().also { it.objectId = "1234" })
         }
 
-        Assert.assertEquals("{\"where\":{\"\$relatedTo\":{\"object\":{\"__type\":\"Pointer\",\"className\":\"GameType\",\"objectId\":\"1234\"},\"key\":\"type\"},\"score\":{\"\$eq\":50}}}", json.encodeToString(query.query))
+        Assert.assertEquals(
+            "{\"where\":{\"\$relatedTo\":{\"object\":{\"__type\":\"Pointer\",\"className\":\"GameType\",\"objectId\":\"1234\"},\"key\":\"type\"},\"score\":{\"\$eq\":50}}}",
+            json.encodeToString(query.query)
+        )
     }
 
     @Test
     fun testQueryNear() {
         val point = ParseGeoPoint(latitude = 10.0, longitude = 20.0)
         val query = GameScore.query {
-           near("location", point)
+            near("location", point)
         }
 
-        Assert.assertEquals("{\"where\":{\"location\":{\"\$nearSphere\":{\"__type\":\"GeoPoint\",\"latitude\":10.0,\"longitude\":20.0}}}}", json.encodeToString(query.query))
+        Assert.assertEquals(
+            "{\"where\":{\"location\":{\"\$nearSphere\":{\"__type\":\"GeoPoint\",\"latitude\":10.0,\"longitude\":20.0}}}}",
+            json.encodeToString(query.query)
+        )
     }
 
     @Test
@@ -359,7 +415,10 @@ class ParseQueryUnitTest {
             withinMiles("location", point, 3958.8)
         }
 
-        Assert.assertEquals("{\"where\":{\"location\":{\"\$nearSphere\":{\"__type\":\"GeoPoint\",\"latitude\":10.0,\"longitude\":20.0},\"\$maxDistanceInMiles\":1.0}}}", json.encodeToString(query.query))
+        Assert.assertEquals(
+            "{\"where\":{\"location\":{\"\$nearSphere\":{\"__type\":\"GeoPoint\",\"latitude\":10.0,\"longitude\":20.0},\"\$maxDistanceInMiles\":1.0}}}",
+            json.encodeToString(query.query)
+        )
     }
 
     @Test
@@ -369,7 +428,10 @@ class ParseQueryUnitTest {
             withinKilometers("location", point, 6371.0)
         }
 
-        Assert.assertEquals("{\"where\":{\"location\":{\"\$nearSphere\":{\"__type\":\"GeoPoint\",\"latitude\":10.0,\"longitude\":20.0},\"\$maxDistanceInMiles\":1.0}}}", json.encodeToString(query.query))
+        Assert.assertEquals(
+            "{\"where\":{\"location\":{\"\$nearSphere\":{\"__type\":\"GeoPoint\",\"latitude\":10.0,\"longitude\":20.0},\"\$maxDistanceInMiles\":1.0}}}",
+            json.encodeToString(query.query)
+        )
     }
 
     @Test
@@ -379,7 +441,10 @@ class ParseQueryUnitTest {
             withinRadians("location", point, 10.0)
         }
 
-        Assert.assertEquals("{\"where\":{\"location\":{\"\$nearSphere\":{\"__type\":\"GeoPoint\",\"latitude\":10.0,\"longitude\":20.0},\"\$maxDistanceInMiles\":10.0}}}", json.encodeToString(query.query))
+        Assert.assertEquals(
+            "{\"where\":{\"location\":{\"\$nearSphere\":{\"__type\":\"GeoPoint\",\"latitude\":10.0,\"longitude\":20.0},\"\$maxDistanceInMiles\":10.0}}}",
+            json.encodeToString(query.query)
+        )
     }
 
     @Test
@@ -390,7 +455,10 @@ class ParseQueryUnitTest {
             withinGeoBox("location", point1, point2)
         }
 
-        Assert.assertEquals("{\"where\":{\"location\":{\"\$within\":{\"\$box\":[{\"__type\":\"GeoPoint\",\"latitude\":10.0,\"longitude\":20.0},{\"__type\":\"GeoPoint\",\"latitude\":20.0,\"longitude\":30.0}]}}}}", json.encodeToString(query.query))
+        Assert.assertEquals(
+            "{\"where\":{\"location\":{\"\$within\":{\"\$box\":[{\"__type\":\"GeoPoint\",\"latitude\":10.0,\"longitude\":20.0},{\"__type\":\"GeoPoint\",\"latitude\":20.0,\"longitude\":30.0}]}}}}",
+            json.encodeToString(query.query)
+        )
     }
 
     @Test
@@ -402,7 +470,10 @@ class ParseQueryUnitTest {
             withinPolygon("location", arrayListOf(point1, point2, point3))
         }
 
-        Assert.assertEquals("{\"where\":{\"location\":{\"\$geoWithin\":{\"\$polygon\":[{\"__type\":\"GeoPoint\",\"latitude\":10.0,\"longitude\":20.0},{\"__type\":\"GeoPoint\",\"latitude\":20.0,\"longitude\":30.0},{\"__type\":\"GeoPoint\",\"latitude\":30.0,\"longitude\":40.0}]}}}}", json.encodeToString(query.query))
+        Assert.assertEquals(
+            "{\"where\":{\"location\":{\"\$geoWithin\":{\"\$polygon\":[{\"__type\":\"GeoPoint\",\"latitude\":10.0,\"longitude\":20.0},{\"__type\":\"GeoPoint\",\"latitude\":20.0,\"longitude\":30.0},{\"__type\":\"GeoPoint\",\"latitude\":30.0,\"longitude\":40.0}]}}}}",
+            json.encodeToString(query.query)
+        )
     }
 
     @Test
@@ -412,6 +483,9 @@ class ParseQueryUnitTest {
             polygonContains("location", point)
         }
 
-        Assert.assertEquals("{\"where\":{\"location\":{\"\$geoIntersects\":{\"\$point\":{\"__type\":\"GeoPoint\",\"latitude\":10.0,\"longitude\":20.0}}}}}", json.encodeToString(query.query))
+        Assert.assertEquals(
+            "{\"where\":{\"location\":{\"\$geoIntersects\":{\"\$point\":{\"__type\":\"GeoPoint\",\"latitude\":10.0,\"longitude\":20.0}}}}}",
+            json.encodeToString(query.query)
+        )
     }
 }

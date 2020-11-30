@@ -5,6 +5,7 @@ import kotlinx.serialization.Transient
 import kotlinx.serialization.json.Json
 import me.lekov.parsekt.api.ACLSerializer
 import me.lekov.parsekt.api.LocalDateTimeSerializer
+import me.lekov.parsekt.api.Operation
 import me.lekov.parsekt.api.ParseApi
 import java.time.LocalDateTime
 
@@ -34,9 +35,11 @@ open class ParseClassCompanion {
 @Serializable
 open class ParseObject<T> {
 
+    private var operations = mutableListOf<Operation>()
     val className: String get() = ParseClasses.valueOf(this::class.simpleName!!).parseName
 
     var objectId: String? = null
+        internal set
 
     @Serializable(with = LocalDateTimeSerializer::class)
     var createdAt: LocalDateTime? = null

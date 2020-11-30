@@ -12,7 +12,6 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import me.lekov.parsekt.annotations.ParseClassName
 import me.lekov.parsekt.api.ParseApi
-import me.lekov.parsekt.store.ParseStore
 import me.lekov.parsekt.types.ACL
 import me.lekov.parsekt.types.ParseClass
 import me.lekov.parsekt.types.ParseClassCompanion
@@ -43,8 +42,7 @@ class ParseApiUnitTest {
             "appId",
             null,
             "masterKey",
-            "http://127.0.0.1:1337/parse",
-            ParseStore()
+            "http://127.0.0.1:1337/parse"
         )
     }
 
@@ -56,7 +54,10 @@ class ParseApiUnitTest {
             httpClient = HttpClient(MockEngine) {
                 engine {
                     addHandler { request ->
-                        assertEquals("http://127.0.0.1:1337/parse/classes/GameScore", request.url.toString())
+                        assertEquals(
+                            "http://127.0.0.1:1337/parse/classes/GameScore",
+                            request.url.toString()
+                        )
                         respondOk()
                     }
                 }
@@ -77,7 +78,10 @@ class ParseApiUnitTest {
             httpClient = HttpClient(MockEngine) {
                 engine {
                     addHandler { request ->
-                        assertEquals("http://127.0.0.1:1337/parse/classes/GameScore/objectId", request.url.toString())
+                        assertEquals(
+                            "http://127.0.0.1:1337/parse/classes/GameScore/objectId",
+                            request.url.toString()
+                        )
                         respondOk()
                     }
                 }
@@ -98,7 +102,7 @@ class ParseApiUnitTest {
             httpClient = HttpClient(MockEngine) {
                 engine {
                     addHandler { request ->
-                        val gameScore = GameScore(false, "Test Player", 0)
+                        val gameScore = GameScore(0, false, "Test Player")
                         gameScore.objectId = "objectId"
                         gameScore.createdAt = LocalDateTime.now()
                         gameScore.updatedAt = LocalDateTime.now()
@@ -119,7 +123,11 @@ class ParseApiUnitTest {
 
     @Serializable
     @ParseClassName("GameScore")
-    class GameScore(var cheatMode: Boolean? = false, var playerName: String? = null, var score: Int? = 0) :
+    class GameScore(
+        var score: Int? = 0,
+        var cheatMode: Boolean? = false,
+        var playerName: String? = null
+    ) :
         ParseClass() {
         companion object : ParseClassCompanion()
     }

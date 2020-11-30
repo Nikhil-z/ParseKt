@@ -9,7 +9,7 @@ For more information about the ParseKt and its features, see the public [documen
 Initialize Parse using:
 
 ```kotlin
-Parse.initialize(context,"appId", "clientKey", "masterKey", "http://127.0.0.1:1337/parse", ParseStore())
+Parse.initialize(context,"appId", "clientKey", "masterKey", "http://127.0.0.1:1337/parse")
 ```
 
 ### Objects
@@ -33,13 +33,13 @@ No further setup is required.
 Save using;
 
 ```kotlin
-GameScore(100, false "Test Player").save()
+GameScore(100, false, "Test Player").save()
 ```
 
 Fetch using:
 
 ```kotlin
-GameScore(100, false "Test Player").fetch()
+GameScore(100, false, "Test Player").fetch()
 ```
 
 ### Queries
@@ -58,7 +58,7 @@ If you want to get by id:
 ParseObject.query{}.get<GameScore>("objectId")
 ```
 
-You can make compaund queries by:
+You can make compound queries by:
 
 ```kotlin
 GameScore.query { lessThanOrEqualTo(GameScore::score.name, 50) }
@@ -123,4 +123,3 @@ you can query over it like this:
 ```kotlin
 val user = AppParseUser.query { equalsTo("username", "john")}.first()
 ```
-

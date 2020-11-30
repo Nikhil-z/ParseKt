@@ -1,7 +1,6 @@
 package me.lekov.parsekt
 
 import android.content.Context
-import me.lekov.parsekt.store.ParseStore
 
 /**
  * Parse
@@ -14,7 +13,6 @@ object Parse {
     internal var masterKey: String? = null
     internal var clientKey: String? = null
     lateinit var serverUrl: String
-    lateinit var storage: ParseStore
 
     /**
      * Initialize
@@ -31,14 +29,12 @@ object Parse {
         applicationId: String,
         clientKey: String? = null,
         masterKey: String? = null,
-        serverUrl: String,
-        storage: ParseStore
+        serverUrl: String
     ) {
         Parse.context = context
         Parse.applicationId = applicationId
         Parse.masterKey = masterKey
         Parse.clientKey = clientKey
         Parse.serverUrl = serverUrl
-        Parse.storage = storage
     }
 }

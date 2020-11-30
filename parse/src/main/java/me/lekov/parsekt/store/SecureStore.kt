@@ -24,7 +24,7 @@ class SecureStore {
         return sharedPreferences.getString(key, null)
     }
 
-    fun getInt(key: String): Int? {
+    fun getInt(key: String): Int {
         return sharedPreferences.getInt(key, -1)
     }
 
@@ -63,5 +63,6 @@ class SecureStore {
 
         @PublishedApi
         internal const val CURRENT_USER_KEY = "_currentUser"
+        internal const val CURRENT_INSTALLATION_KEY = "_currentInstallation"
     }
 }
