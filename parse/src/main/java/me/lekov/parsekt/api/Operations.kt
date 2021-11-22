@@ -19,7 +19,7 @@ internal data class AddRelationOperation(val objects: List<ParsePointer>) : Oper
 internal class DeleteOperation : Operation("Delete")
 
 @Serializable
-internal data class IncrementOperation(val amount: Int) : Operation("Increment")
+internal data class IncrementOperation<V: Number>(val amount: V) : Operation("Increment")
 
 @Serializable
 internal data class RemoveOperation<T>(val objects: List<T>) : Operation("Remove")

@@ -44,7 +44,6 @@ open class ParseObject<T> {
     @Serializable(with = LocalDateTimeSerializer::class)
     var updatedAt: LocalDateTime? = null
 
-
     @Serializable(with = ACLSerializer::class)
     var ACL: ACL? = null
 
@@ -66,18 +65,6 @@ open class ParseObject<T> {
      */
     inline fun <reified T : ParseObject<T>> hasSameObjectId(other: T): Boolean {
         return this.className == other.className && this.objectId == other.objectId
-    }
-
-    fun delete(key: String) {
-        this.operations[key] = DeleteOperation()
-    }
-
-    fun increment(key: String, amount: Int) {
-        this.operations[key] = IncrementOperation(amount)
-    }
-
-    fun decrement(key: String, amount: Int) {
-        this.operations[key] = IncrementOperation(-abs(amount))
     }
 
     override fun toString(): String {
