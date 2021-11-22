@@ -21,6 +21,7 @@ import kotlinx.serialization.modules.contextual
 import me.lekov.parsekt.Parse
 import me.lekov.parsekt.types.*
 import java.time.LocalDateTime
+import java.util.*
 import kotlin.collections.set
 
 typealias Options = Set<ParseApi.Option>
@@ -31,9 +32,26 @@ class ParseApi {
         object Batch : Endpoint()
         class Objects(val className: String) : Endpoint()
         class Object(val className: String, val objectId: String) : Endpoint()
+        object Users: Endpoint()
+        class User(val objectId: String) : Endpoint()
+        object Installations: Endpoint()
+        class Installation(val objectId: String) : Endpoint()
+        object Sessions : Endpoint()
+        class Session(val objectId: String) : Endpoint()
+        class Event(val event: String) : Endpoint()
+        object Roles: Endpoint()
+        class Role(val objectId: String) : Endpoint()
         object Login : Endpoint()
-        object Signup : Endpoint()
         object Logout : Endpoint()
+        object Signup : Endpoint()
+        class File(val fileName: String) : Endpoint()
+        object PasswordReset : Endpoint()
+        object VerificationEmail : Endpoint()
+        class Functions(val name: String) : Endpoint()
+        class Jobs(val name: String) : Endpoint()
+        class Aggregate(val className: String) : Endpoint()
+        object Config : Endpoint()
+        object Health : Endpoint()
         class Other(val path: String) : Endpoint()
     }
 
@@ -41,9 +59,13 @@ class ParseApi {
         object UseMasterKey : Option()
         class SessionToken(val token: String) : Option()
         class InstallationId(val installation: String) : Option()
+        class MimeType(val mimeType: String): Option()
+        class FileSize(val fileSize: String): Option()
+        object RemoveMimeType: Option()
+        class Metadata(val data: Map<String, String>): Option()
+        class Tags(val data: Map<String, String>): Option()
     }
 
-    @KtorExperimentalAPI
     data class Command<T, U>(
         val method: HttpMethod,
         val path: Endpoint,
@@ -103,13 +125,13 @@ class ParseApi {
                 {
                     when (it) {
                         is ClientRequestException ->
-                            it.response?.let { response ->
+                            it.response.let { response ->
                                 response.content.readUTF8Line()?.let { raw ->
                                     throw Json.decodeFromString<ParseError>(
                                         raw
                                     )
                                 } ?: throw Error()
-                            } ?: throw Error()
+                            }
                         is UnresolvedAddressException -> {
                             // Internet Error
                             throw ParseError(ParseError.CONNECTION_FAILED)
@@ -140,6 +162,8 @@ class ParseApi {
                 headers["X-Parse-Session-Token"] = it
             }
 
+            headers["X-Parse-Request-Id"] = UUID.randomUUID().toString()
+
             options.forEach {
                 when (it) {
                     is Option.UseMasterKey -> {
@@ -153,6 +177,25 @@ class ParseApi {
                     is Option.InstallationId -> {
                         headers["X-Parse-Installation-Id"] = it.installation
                     }
+                    is Option.MimeType -> {
+                        headers["Content-Type"] = it.mimeType
+                    }
+                    is Option.FileSize -> {
+                        headers["Content-Length"] = it.fileSize
+                    }
+                    is Option.RemoveMimeType -> {
+                        headers.remove("Content-Type")
+                    }
+                    is Option.Metadata -> {
+                        it.data.forEach { meta ->
+                            headers[meta.key] = meta.value
+                        }
+                    }
+                    is Option.Tags -> {
+                        it.data.forEach { tag ->
+                            headers[tag.key] = tag.value
+                        }
+                    }
                 }
             }
 
@@ -164,9 +207,26 @@ class ParseApi {
             is Endpoint.Batch -> "/batch"
             is Endpoint.Objects -> "/classes/${endpoint.className}"
             is Endpoint.Object -> "/classes/${endpoint.className}/${endpoint.objectId}"
+            is Endpoint.Users -> "/users"
+            is Endpoint.User -> "/users/${endpoint.objectId}"
+            is Endpoint.Installations -> "/installations"
+            is Endpoint.Installation -> "/installations/${endpoint.objectId}"
+            is Endpoint.Sessions -> "/sessions"
+            is Endpoint.Session -> "/sessions/${endpoint.objectId}"
+            is Endpoint.Event -> "/events/${endpoint.event}"
+            is Endpoint.Roles -> "/roles"
+            is Endpoint.Role -> "/roles/${endpoint.objectId}"
             is Endpoint.Login -> "/login"
             is Endpoint.Signup -> "/users"
             is Endpoint.Logout -> "/logout"
+            is Endpoint.PasswordReset -> "/requestPasswordReset"
+            is Endpoint.VerificationEmail -> "/verificationEmailRequest"
+            is Endpoint.Functions -> "/functions/${endpoint.name}"
+            is Endpoint.Jobs -> "/jobs/${endpoint.name}"
+            is Endpoint.File -> "/files/${endpoint.fileName}"
+            is Endpoint.Aggregate -> "/aggregate/${endpoint.className}"
+            is Endpoint.Config -> "/config"
+            is Endpoint.Health -> "/health"
             is Endpoint.Other -> endpoint.path
         }
 
@@ -270,5 +330,5 @@ suspend inline fun <reified T : ParseObject<T>> ParseObject<T>.delete(options: O
  * @return
  */
 inline fun <reified T : ParseObject<T>> ParseObject<T>.relation(key: String): ParseQuery.Builder {
-    return ParseObject.query { related(key, this@relation as ParseObject<Any>) }.query
+    return ParseObject.query { related(key, this@relation as ParseObject<*>) }.query
 }
