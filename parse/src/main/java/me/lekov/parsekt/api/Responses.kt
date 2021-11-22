@@ -18,7 +18,7 @@ internal data class SaveResponse(
         return toItem.also {
             it.objectId = objectId
             it.createdAt = createdAt
-            it.updatedAt = updatedAt?.let { it } ?: createdAt
+            it.updatedAt = updatedAt ?: createdAt
         }
     }
 }
@@ -45,7 +45,7 @@ data class LoginSignUpResponse(
         return toItem.also {
             it.objectId = objectId
             it.createdAt = createdAt
-            it.updatedAt = updatedAt?.let { it } ?: createdAt
+            it.updatedAt = updatedAt ?: createdAt
         }
     }
 }

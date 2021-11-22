@@ -7,6 +7,7 @@ import io.ktor.client.features.cache.*
 import io.ktor.client.features.json.*
 import io.ktor.client.features.websocket.*
 import io.ktor.http.cio.websocket.*
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.channels.consumeEach
@@ -15,6 +16,7 @@ import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.*
 import kotlinx.serialization.modules.SerializersModule
@@ -64,6 +66,7 @@ internal class ParseLiveQuery private constructor(@PublishedApi internal val cli
         }
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     suspend fun subscribe(className: String, query: ParseQuery.Builder): Flow<String> {
 
         if (webSocketSession == null) {
@@ -112,6 +115,7 @@ internal class ParseLiveQuery private constructor(@PublishedApi internal val cli
             install(JsonFeature)
         }
 
+        @OptIn(ExperimentalCoroutinesApi::class)
         suspend inline fun subscribe(): Flow<List<U>> {
             return ParseLiveQuery.getInstance(httpClient).subscribe(className.path, query).map {
                 mapper.invoke(it)

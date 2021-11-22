@@ -57,7 +57,8 @@ object LocalDateTimeQuerySerializer : KSerializer<LocalDateTime> {
 }
 
 object ACLSerializer : KSerializer<ACL> {
-    @ExperimentalSerializationApi
+
+    @OptIn(ExperimentalSerializationApi::class)
     override val descriptor: SerialDescriptor =
         mapSerialDescriptor<String, Map<String, Boolean>>()
 
@@ -76,7 +77,7 @@ object ACLSerializer : KSerializer<ACL> {
         return ACL(mutable)
     }
 
-    @ExperimentalSerializationApi
+    @OptIn(ExperimentalSerializationApi::class)
     override fun serialize(encoder: Encoder, value: ACL) {
         encoder.encodeNullableSerializableValue(
             MapSerializer(

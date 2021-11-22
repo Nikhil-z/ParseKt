@@ -5,6 +5,7 @@ import io.ktor.client.*
 import io.ktor.client.engine.mock.*
 import io.ktor.client.features.json.*
 import io.ktor.http.*
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runBlockingTest
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
@@ -47,6 +48,7 @@ class ParseApiUnitTest {
     }
 
     @Test
+    @ExperimentalCoroutinesApi
     fun testParseApiEndpointObjects() = runBlockingTest {
         val command = ParseApi.Command<TestParseUser, TestParseUser>(
             HttpMethod.Get,
@@ -71,6 +73,7 @@ class ParseApiUnitTest {
     }
 
     @Test
+    @ExperimentalCoroutinesApi
     fun testParseApiEndpointObject() = runBlockingTest {
         val command = ParseApi.Command<TestParseUser, TestParseUser>(
             HttpMethod.Get,
@@ -95,13 +98,14 @@ class ParseApiUnitTest {
     }
 
     @Test
+    @ExperimentalCoroutinesApi
     fun testParseApiGetObject() = runBlockingTest {
         val command = ParseApi.Command<GameScore, GameScore>(
             HttpMethod.Get,
             ParseApi.Endpoint.Object("GameScore", "objectId"),
             httpClient = HttpClient(MockEngine) {
                 engine {
-                    addHandler { request ->
+                    addHandler {
                         val gameScore = GameScore(0, false, "Test Player")
                         gameScore.objectId = "objectId"
                         gameScore.createdAt = LocalDateTime.now()

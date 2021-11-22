@@ -111,7 +111,7 @@ class ACL(internal var acl: MutableMap<String, MutableMap<String, Boolean>>? = n
      * @return
      */
     fun get(key: String, access: Access): Boolean {
-        return acl?.get(key)?.get(access) ?: false
+        return acl?.get(key)?.get(access.name) ?: false
     }
 
     /**
@@ -135,7 +135,7 @@ class ACL(internal var acl: MutableMap<String, MutableMap<String, Boolean>>? = n
         if (value) {
             acl?.get(key)?.put(access.name, value)
         } else {
-            acl?.get(key)?.remove(access)
+            acl?.get(key)?.remove(access.name)
             if (acl?.get(key)?.isEmpty() == true) {
                 acl?.remove(key)
             }
